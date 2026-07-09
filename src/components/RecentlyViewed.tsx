@@ -1,0 +1,119 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { getProductById } from "@/lib/mockData";
+import { useCartStore, useCartHydrated } from "@/lib/store/useCartStore";
+
+/**
+ * Reads the persisted browsing history and shows the last few pieces the
+ * shopper looked at. Two flavours:
+ *  - "section": a full page section (used at the bottom of the PDP)
+ *  - "compact": a slim rail (used in the empty cart drawer)
+ */
+export default function RecentlyViewed({
+  currentId,
+  variant = "section",
+  onNavigate,
+}: {
+  currentId?: string;
+  variant?: "section" | "compact";
+  onNavigate?: () => void;
+}) {
+  const hydrated = useCartHydrated();
+  const recentlyViewed = useCartStore((state) => state.recentlyViewed);
+
+  const items = hydrated
+    ? recentlyViewed
+        .filter((id) => id !== currentId)
+        .map(getProductById)
+        .filter((p): p is NonNullable<typeof p> => p !== undefined)
+        .slice(0, 3)
+    : [];
+
+  if (items.length === 0) return null;
+
+  if (variant === "compact") {
+    return (
+      <div>
+        <p className="text-center text-xs uppercase tracking-[0.3em] text-champagne-gold">
+          Recently Viewed
+        </p>
+        <ul className="mt-5 space-y-3">
+          {items.map((product) => (
+            <li key={product.id}>
+              <Link
+                href={`/product/${product.id}`}
+                prefetch
+                onClick={onNavigate}
+                className="group flex items-center gap-4"
+              >
+                <div className="relative h-16 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-sand">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="56px"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm text-midnight-navy">
+                    {product.name}
+                  </p>
+                  <p className="text-sm text-midnight-navy/60">
+                    ${product.price}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <section className="border-t border-champagne-gold/20 bg-sand px-6 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-10 text-center sm:mb-12">
+          <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">
+            Your Journey
+          </span>
+          <h2 className="mt-4 font-heading text-3xl text-midnight-navy sm:text-4xl">
+            Recently Viewed
+          </h2>
+        </div>
+
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
+          {items.map((product) => (
+            <Link
+              key={product.id}
+              href={`/product/${product.id}`}
+              prefetch
+              className="group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:shadow-xl hover:shadow-champagne-gold/20"
+            >
+              <div className="relative aspect-[4/5] overflow-hidden">
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+              </div>
+              <div className="flex items-center justify-between p-5">
+                <h3 className="text-sm text-midnight-navy sm:text-base">
+                  {product.name}
+                </h3>
+                <span className="text-sm text-midnight-navy sm:text-base">
+                  ${product.price}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

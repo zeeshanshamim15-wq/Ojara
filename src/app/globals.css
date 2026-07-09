@@ -8,8 +8,52 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Brand color palette */
+  --color-midnight-navy: #071a47;
+  --color-champagne-gold: #d6af7a;
+  --color-ivory: #f7f3eb;
+  --color-sand: #eadcc5;
+  --color-warm-grey: #c9c2b6;
+
+  /* Brand typography */
+  --font-heading: var(--font-cinzel);
+  --font-sans: var(--font-montserrat);
+}
+
+/* Animations — Tailwind v4 requires @keyframes nested inside @theme. */
+@theme {
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-fade-in-up: fade-in-up 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(1.25rem) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+/* Hide scrollbars while keeping horizontal scroll (e.g. Shop By Intention nav). */
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,8 +63,22 @@
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-weight: 300;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), serif;
 }
