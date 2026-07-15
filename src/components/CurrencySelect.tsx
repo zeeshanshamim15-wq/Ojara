@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 
 // Display-only region selector for now. Persists the choice so it sticks across
-// visits; wiring it to real price conversion can come later.
-const currencies = ["USD", "INR"] as const;
+// visits; wiring it to real price conversion can come later. Prices render in
+// INR today, so INR leads and is the default.
+const currencies = ["INR", "USD"] as const;
 type Currency = (typeof currencies)[number];
 
 export default function CurrencySelect({
@@ -12,7 +13,7 @@ export default function CurrencySelect({
 }: {
   className?: string;
 }) {
-  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currency, setCurrency] = useState<Currency>("INR");
 
   useEffect(() => {
     const saved = localStorage.getItem("ojara-currency");
@@ -31,7 +32,7 @@ export default function CurrencySelect({
       <select
         value={currency}
         onChange={(e) => handleChange(e.target.value as Currency)}
-        className="cursor-pointer appearance-none rounded-full bg-transparent py-1 pl-3 pr-6 text-xs uppercase tracking-[0.2em] text-champagne-gold/80 transition-colors duration-300 ease-out hover:text-champagne-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne-gold/40"
+        className="cursor-pointer appearance-none rounded-full bg-transparent py-1 pl-3 pr-6 text-xs uppercase tracking-[0.2em] text-champagne-gold/95 transition-colors duration-300 ease-out hover:text-champagne-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-champagne-gold/40"
       >
         {currencies.map((c) => (
           <option key={c} value={c} className="bg-midnight-navy text-ivory">
@@ -51,7 +52,7 @@ export default function CurrencySelect({
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        className="pointer-events-none absolute right-1 text-champagne-gold/70"
+        className="pointer-events-none absolute right-1 text-champagne-gold"
       >
         <path d="m6 9 6 6 6-6" />
       </svg>

@@ -9,17 +9,19 @@ import {
   useCartHydrated,
 } from "@/lib/store/useCartStore";
 import RecentlyViewed from "@/components/RecentlyViewed";
+import { formatPrice } from "@/lib/format";
 
-// Spend this much (in dollars) to unlock complimentary shipping.
-const FREE_SHIPPING_THRESHOLD = 300;
+// Spend this much (in rupees) to unlock complimentary shipping.
+const FREE_SHIPPING_THRESHOLD = 1500;
 // Flat fee for the luxury gift-wrap + handwritten intention note.
-const GIFT_WRAP_FEE = 15;
+const GIFT_WRAP_FEE = 149;
 
 export default function CartDrawer() {
   const isCartOpen = useCartStore((state) => state.isCartOpen);
   const closeCart = useCartStore((state) => state.closeCart);
+  const openCheckout = useCartStore((state) => state.openCheckout);
   const removeItem = useCartStore((state) => state.removeItem);
-  const clearCart = useCartStore((state) => state.clearCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
   const cartItemsRaw = useCartStore((state) => state.cartItems);
   const totalPriceRaw = useCartStore(selectTotalPrice);
 
@@ -47,23 +49,10 @@ export default function CartDrawer() {
     toast.success("✦ Harmony code applied successfully.");
   };
 
-  // Checkout hand-off. Placeholder for the real Wix Secure Checkout API — for
-  // now it shows a loading state, toasts, then clears the bag to simulate a
-  // successful hand-off.
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-
-  const handleWixCheckout = async () => {
-    if (isCheckingOut) return;
-    setIsCheckingOut(true);
-    toast.success("✦ Initiating Wix Secure Checkout...", {
-      description: "Awaiting API Integration",
-    });
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    clearCart();
-    setPromoApplied(false);
-    setGiftWrap(false);
-    setGiftNote("");
-    setIsCheckingOut(false);
+  // Hand off to the real checkout modal (COD + Razorpay → Wix order + email).
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    openCheckout();
   };
 
   // Free-shipping progress: how far to the threshold, and how full the bar is.
@@ -96,7 +85,7 @@ export default function CartDrawer() {
       <div
         aria-hidden={!isCartOpen}
         onClick={closeCart}
-        className={`fixed inset-0 z-[60] bg-midnight-navy/60 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[9998] bg-midnight-navy/60 backdrop-blur-[2px] transition-opacity duration-300 ${
           isCartOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />
@@ -106,20 +95,20 @@ export default function CartDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Shopping bag"
-        className={`fixed right-0 top-0 z-[70] flex h-full w-full max-w-md flex-col bg-ivory shadow-2xl transition-transform duration-300 ease-out ${
+        className={`fixed right-0 top-0 z-[9999] flex h-full w-full max-w-md flex-col bg-ivory shadow-2xl transition-transform duration-300 ease-out ${
           isCartOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-warm-grey/40 px-6 py-5">
-          <h2 className="font-heading text-xl uppercase tracking-[0.25em] text-midnight-navy">
+        <div className="flex items-center justify-between border-b border-midnight-navy/20 px-6 py-5">
+          <h2 className="font-heading text-xl uppercase tracking-[0.25em] text-midnight-navy font-bold">
             Your Bag
           </h2>
           <button
             type="button"
             aria-label="Close cart"
             onClick={closeCart}
-            className="rounded-full p-1 text-midnight-navy/70 transition-colors hover:text-midnight-navy"
+            className="cursor-pointer rounded-full p-1 text-midnight-navy/70 transition-all duration-150 hover:text-midnight-navy active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -139,17 +128,17 @@ export default function CartDrawer() {
 
         {/* Free-shipping progress — nudges average order value upward */}
         {cartItems.length > 0 && (
-          <div className="border-b border-warm-grey/40 px-6 py-4">
+          <div className="border-b border-midnight-navy/10 px-6 py-4 bg-sand/10">
             <p className="text-center text-xs leading-5 tracking-wide text-midnight-navy/80 sm:text-sm">
               {hasFreeShipping ? (
-                <span className="font-medium text-champagne-gold">
+                <span className="font-semibold text-champagne-gold">
                   ✦ You have unlocked Free Shipping!
                 </span>
               ) : (
                 <>
                   You are{" "}
-                  <span className="font-medium text-midnight-navy">
-                    ${amountToFreeShipping}
+                  <span className="font-bold text-midnight-navy">
+                    {formatPrice(amountToFreeShipping)}
                   </span>{" "}
                   away from Free Shipping!
                 </>
@@ -171,8 +160,8 @@ export default function CartDrawer() {
           </div>
         )}
 
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto px-6">
+        {/* Items scroll rail */}
+        <div className="flex-1 overflow-y-auto px-6 py-2">
           {cartItems.length === 0 ? (
             <div className="flex h-full flex-col justify-center">
               <div className="text-center">
@@ -187,41 +176,82 @@ export default function CartDrawer() {
               </div>
             </div>
           ) : (
-            <ul className="divide-y divide-warm-grey/40">
+            <ul className="divide-y divide-midnight-navy/10">
               {cartItems.map((item) => (
-                <li key={item.product.id} className="flex gap-4 py-5">
-                  <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-sand">
+                <li key={item.product.id} className="flex gap-4 py-5 items-start">
+                  {/* Premium, larger image frame */}
+                  <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-midnight-navy/10 bg-white">
                     <Image
                       src={item.product.image}
                       alt={item.product.name}
                       fill
-                      sizes="80px"
+                      sizes="96px"
                       className="object-cover"
                     />
                   </div>
 
-                  <div className="flex flex-1 flex-col">
-                    <div className="flex justify-between gap-2">
-                      <h3 className="text-base text-midnight-navy">
-                        {item.product.name}
-                      </h3>
-                      <span className="text-base text-midnight-navy">
-                        ${item.product.price * item.quantity}
-                      </span>
+                  {/* Item metadata and interaction details */}
+                  <div className="flex flex-1 flex-col h-full min-h-[96px] justify-between">
+                    <div>
+                      <div className="flex justify-between gap-2 items-start">
+                        <h3 className="text-sm font-semibold text-midnight-navy line-clamp-2">
+                          {item.product.name}
+                        </h3>
+                        <span className="text-sm font-bold text-midnight-navy flex-shrink-0">
+                          {formatPrice(item.product.price * item.quantity)}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.2em] font-semibold text-champagne-gold">
+                        ✦ {item.product.intention}
+                      </p>
                     </div>
-                    <p className="mt-1 text-xs uppercase tracking-[0.2em] text-champagne-gold">
-                      {item.product.intention}
-                    </p>
-                    <div className="mt-auto flex items-center justify-between pt-3">
-                      <span className="text-sm text-midnight-navy/70">
-                        Qty {item.quantity}
-                      </span>
+
+                    {/* Quantity selectors + sleek trash bin remove action */}
+                    <div className="mt-3 flex items-center justify-between">
+                      {/* Premium bordered numeric box */}
+                      <div className="flex items-center rounded-lg border border-midnight-navy/20 bg-white/40 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          className="flex h-8 w-8 items-center justify-center text-midnight-navy/60 hover:text-midnight-navy active:scale-90 transition-transform font-medium"
+                          aria-label="Decrease quantity"
+                        >
+                          —
+                        </button>
+                        <span className="w-8 text-center text-xs font-bold text-midnight-navy select-none">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          className="flex h-8 w-8 items-center justify-center text-midnight-navy/60 hover:text-midnight-navy active:scale-90 transition-transform font-medium"
+                          aria-label="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Clean trash-can remove link */}
                       <button
                         type="button"
                         onClick={() => removeItem(item.product.id)}
-                        className="text-xs uppercase tracking-[0.15em] text-midnight-navy/50 underline-offset-4 transition-colors hover:text-midnight-navy hover:underline"
+                        className="flex items-center gap-1.5 cursor-pointer text-xs uppercase tracking-[0.1em] text-midnight-navy/60 hover:text-red-700 transition-colors py-1.5 px-2.5 rounded-md hover:bg-red-50/50 active:scale-95"
+                        aria-label="Remove item"
                       >
-                        Remove
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6" />
+                        </svg>
+                        <span className="font-semibold text-[0.65rem] tracking-wider">Remove</span>
                       </button>
                     </div>
                   </div>
@@ -231,25 +261,27 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Footer: total + checkout */}
+        {/* Sticky footer with pricing details + checkouts */}
         {cartItems.length > 0 && (
-          <div className="border-t border-warm-grey/40 px-6 py-6">
-            {/* Luxury gift wrap + intention note */}
-            <div className="mb-5 border-b border-warm-grey/40 pb-5">
+          <div className="border-t border-midnight-navy/15 px-6 py-6 bg-sand/15 shadow-[0_-8px_30px_rgba(0,0,0,0.03)] backdrop-blur-md">
+            {/* Luxury gift wrap + intention note upsells */}
+            <div className="mb-4 border-b border-midnight-navy/10 pb-4">
               <button
                 type="button"
                 role="switch"
                 aria-checked={giftWrap}
                 onClick={() => setGiftWrap((v) => !v)}
-                className="flex w-full items-center justify-between gap-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 text-left transition-all duration-150 active:scale-[0.99]"
               >
-                <span className="text-xs uppercase tracking-[0.2em] text-midnight-navy/80">
-                  ✦ Add Luxury Gift Wrap &amp; Intention Note{" "}
-                  <span className="text-champagne-gold">(+${GIFT_WRAP_FEE})</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy/85">
+                  ✦ Add Luxury Gift Wrap &amp; Note{" "}
+                  <span className="text-champagne-gold font-bold">
+                    (+{formatPrice(GIFT_WRAP_FEE)})
+                  </span>
                 </span>
                 <span
                   aria-hidden="true"
-                  className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-300 ease-out ${
+                  className={`relative h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-out ${
                     giftWrap ? "bg-champagne-gold" : "bg-warm-grey/50"
                   }`}
                 >
@@ -270,18 +302,18 @@ export default function CartDrawer() {
               >
                 <div className="overflow-hidden">
                   <label className="block">
-                    <span className="text-xs uppercase tracking-[0.15em] text-midnight-navy/50">
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-midnight-navy/70">
                       Your handwritten note
                     </span>
                     <textarea
                       value={giftNote}
                       onChange={(e) => setGiftNote(e.target.value)}
-                      rows={3}
+                      rows={2}
                       maxLength={240}
                       placeholder="With love and light — may this carry your intention…"
-                      className="mt-2 w-full resize-none rounded-2xl border border-warm-grey/50 bg-white/50 px-4 py-3 text-sm leading-6 text-midnight-navy placeholder:text-warm-grey focus:border-champagne-gold focus:outline-none focus:ring-2 focus:ring-champagne-gold/30"
+                      className="mt-2 w-full resize-none rounded-md border border-midnight-navy/30 bg-white/40 px-4 py-3 text-sm leading-6 text-midnight-navy placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy"
                     />
-                    <span className="mt-1 block text-right text-[0.65rem] text-warm-grey">
+                    <span className="mt-1 block text-right text-[0.65rem] text-midnight-navy/60">
                       {giftNote.length}/240
                     </span>
                   </label>
@@ -289,15 +321,15 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* Offer code — collapsible */}
-            <div className="mb-5 border-b border-warm-grey/40 pb-5">
+            {/* Offer code toggle */}
+            <div className="mb-4 border-b border-midnight-navy/10 pb-4">
               <button
                 type="button"
                 onClick={() => setPromoOpen((v) => !v)}
                 aria-expanded={promoOpen}
-                className="flex w-full items-center justify-between text-left"
+                className="flex w-full cursor-pointer items-center justify-between text-left transition-all duration-150 active:scale-[0.99]"
               >
-                <span className="text-xs uppercase tracking-[0.2em] text-midnight-navy/70">
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy/80">
                   Apply Offer Code
                 </span>
                 <span
@@ -328,17 +360,17 @@ export default function CartDrawer() {
                       }}
                       placeholder="Enter code"
                       aria-label="Offer code"
-                      className="flex-1 rounded-full border border-warm-grey/50 bg-white/50 px-4 py-2.5 text-sm uppercase tracking-[0.15em] text-midnight-navy placeholder:normal-case placeholder:tracking-normal placeholder:text-warm-grey focus:border-champagne-gold focus:outline-none focus:ring-2 focus:ring-champagne-gold/30"
+                      className="flex-1 rounded-md border border-midnight-navy/30 bg-transparent px-4 py-2.5 text-xs uppercase tracking-[0.15em] text-midnight-navy placeholder:normal-case placeholder:tracking-normal placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy"
                     />
                     <button
                       type="submit"
-                      className="flex-shrink-0 rounded-full bg-midnight-navy px-6 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-champagne-gold transition-colors duration-300 ease-out hover:bg-midnight-navy/90"
+                      className="flex-shrink-0 cursor-pointer rounded-full bg-midnight-navy px-5 py-2 text-xs font-medium uppercase tracking-[0.2em] text-champagne-gold transition-all duration-150 hover:bg-midnight-navy/90 active:scale-95"
                     >
                       Apply
                     </button>
                   </form>
                   {promoApplied && (
-                    <p className="mt-3 text-xs tracking-wide text-champagne-gold">
+                    <p className="mt-3 text-xs tracking-wide text-champagne-gold font-semibold">
                       ✦ Code applied — savings appear at checkout.
                     </p>
                   )}
@@ -346,42 +378,53 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {giftWrap && (
-              <div className="mb-2 flex items-center justify-between text-xs text-midnight-navy/60">
-                <span className="uppercase tracking-[0.15em]">
-                  Gift wrap &amp; note
-                </span>
-                <span>+${GIFT_WRAP_FEE}</span>
+            {/* Pricing details */}
+            <div className="space-y-1.5 pb-3">
+              <div className="flex items-center justify-between text-xs text-midnight-navy/80">
+                <span className="uppercase tracking-[0.15em]">Subtotal</span>
+                <span className="font-bold">{formatPrice(totalPrice)}</span>
               </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-sm uppercase tracking-[0.2em] text-midnight-navy/70">
+
+              <div className="flex items-center justify-between text-xs text-midnight-navy/80">
+                <span className="uppercase tracking-[0.15em]">Shipping</span>
+                <span className="text-green-600 font-bold uppercase tracking-wider">FREE</span>
+              </div>
+
+              {giftWrap && (
+                <div className="flex items-center justify-between text-xs text-midnight-navy/70">
+                  <span className="uppercase tracking-[0.15em]">Gift wrap</span>
+                  <span className="font-bold">+{formatPrice(GIFT_WRAP_FEE)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-midnight-navy/15 pt-3">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-midnight-navy/80">
                 Total
               </span>
-              <span className="text-2xl text-midnight-navy">
-                ${displayTotal}
+              <span className="text-2xl text-midnight-navy font-bold">
+                {formatPrice(displayTotal)}
               </span>
             </div>
+
+            {/* Premium, high-converting CTAs */}
             <button
               type="button"
-              onClick={handleWixCheckout}
-              disabled={isCheckingOut}
-              aria-busy={isCheckingOut}
-              className="mt-5 flex w-full items-center justify-center gap-3 rounded-full bg-champagne-gold px-8 py-4 text-sm font-medium uppercase tracking-[0.25em] text-midnight-navy transition-colors duration-300 ease-out hover:bg-champagne-gold/85 disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={handleCheckout}
+              className="mt-4 flex w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-midnight-navy text-champagne-gold px-8 py-4.5 text-xs font-bold uppercase tracking-[0.25em] transition-all duration-150 hover:bg-midnight-navy/90 active:scale-95 shadow-lg hover:shadow-xl"
             >
-              {isCheckingOut && (
-                <span
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin rounded-full border-2 border-midnight-navy/30 border-t-midnight-navy"
-                />
-              )}
-              {isCheckingOut ? "Processing..." : "Checkout"}
+              ORDER NOW ⚡
             </button>
-            <p className="mt-3 text-center text-xs text-warm-grey">
-              Secure Wix checkout · encrypted &amp; protected.
+            <p className="mt-3.5 text-center text-[0.65rem] tracking-wide text-midnight-navy/60 font-semibold uppercase flex items-center justify-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Secure Wix checkout · encrypted
             </p>
           </div>
         )}
+
       </aside>
     </>
   );

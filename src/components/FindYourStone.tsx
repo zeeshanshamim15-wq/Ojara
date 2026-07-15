@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import EnergyQuiz from "@/components/EnergyQuiz";
+import dynamic from "next/dynamic";
+
+const EnergyQuiz = dynamic(() => import("@/components/EnergyQuiz"), { ssr: false });
 
 /**
  * Self-contained "Find Your Stone" CTA + quiz. Drop it anywhere (Hero, Header)
@@ -19,10 +21,10 @@ export default function FindYourStone({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={
+        className={`cursor-pointer transition-all duration-150 active:scale-95 ${
           className ||
-          "inline-flex items-center justify-center gap-2 rounded-full border border-champagne-gold px-8 py-3.5 text-xs font-normal uppercase tracking-[0.25em] text-champagne-gold transition-colors duration-300 ease-out hover:bg-champagne-gold hover:text-midnight-navy sm:px-10 sm:text-sm"
-        }
+          "inline-flex items-center justify-center gap-2 rounded-full border border-champagne-gold px-8 py-3.5 text-xs font-normal uppercase tracking-[0.25em] text-champagne-gold hover:bg-champagne-gold hover:text-midnight-navy sm:px-10 sm:text-sm"
+        }`}
       >
         ✦ Find Your Stone
       </button>

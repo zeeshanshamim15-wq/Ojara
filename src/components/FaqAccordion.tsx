@@ -33,9 +33,9 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
                 type="button"
                 onClick={() => toggle(index)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center justify-between gap-4 py-5 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left transition-all duration-150 active:scale-[0.99]"
               >
-                <span className="text-base tracking-wide text-midnight-navy sm:text-lg">
+                <span className="text-base tracking-wide text-midnight-navy sm:text-lg font-medium">
                   {item.question}
                 </span>
                 <span
@@ -56,7 +56,7 @@ export default function FaqAccordion({ items }: { items: FaqItem[] }) {
               }`}
             >
               <div className="overflow-hidden">
-                <p className="pb-6 text-sm leading-7 text-midnight-navy/70">
+                <p className="pb-6 text-sm leading-7 text-midnight-navy/85">
                   {item.answer}
                 </p>
               </div>

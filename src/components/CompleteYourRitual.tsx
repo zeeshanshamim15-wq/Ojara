@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { products } from "@/lib/mockData";
+import { formatPrice } from "@/lib/format";
 
 /**
  * Cross-sell rail shown at the foot of a product page. Surfaces three other
@@ -16,7 +17,7 @@ export default function CompleteYourRitual({
     .slice(0, 3);
 
   return (
-    <section className="border-t border-champagne-gold/20 bg-sand px-6 py-16 sm:py-20">
+    <section className="border-t border-champagne-gold/30 bg-sand px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center sm:mb-12">
           <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">
@@ -33,7 +34,7 @@ export default function CompleteYourRitual({
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-700 hover:shadow-2xl hover:shadow-champagne-gold/20"
+              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-champagne-gold/20 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image
@@ -52,8 +53,8 @@ export default function CompleteYourRitual({
                 <h3 className="text-base text-midnight-navy sm:text-lg">
                   {product.name}
                 </h3>
-                <span className="text-base text-midnight-navy sm:text-lg">
-                  ${product.price}
+                <span className="flex-shrink-0 text-base text-midnight-navy sm:text-lg">
+                  {formatPrice(product.price)}
                 </span>
               </div>
             </Link>

@@ -57,7 +57,7 @@ const values: ValueProp[] = [
 
 export default function ValueProps() {
   return (
-    <section className="border-y border-champagne-gold/20 bg-sand px-6 py-16 sm:py-24">
+    <section className="border-y border-champagne-gold/30 bg-sand px-6 py-16 sm:py-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-champagne-gold/30 bg-champagne-gold/30 sm:grid-cols-3">
         {values.map((value) => (
           <div
@@ -68,7 +68,7 @@ export default function ValueProps() {
             <h3 className="mt-8 text-lg uppercase tracking-[0.2em] text-midnight-navy">
               {value.title}
             </h3>
-            <p className="mt-4 max-w-xs text-sm leading-7 text-midnight-navy/60">
+            <p className="mt-4 max-w-xs text-sm leading-7 text-midnight-navy/70">
               {value.description}
             </p>
           </div>

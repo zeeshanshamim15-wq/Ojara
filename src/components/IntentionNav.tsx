@@ -1,15 +1,12 @@
 import Link from "next/link";
+import { categories } from "@/lib/mockData";
 
-// Shop By Intention — a visual, energy-first way in for the shopper. Each
-// intention deep-links to the sacred object that best carries it, so the bar
-// works as real navigation rather than decoration.
-const intentions = [
-  { label: "Attract Wealth", href: "/product/raw-pyrite-cluster" },
-  { label: "Evil Eye Protection", href: "/product/evil-eye-bracelet" },
-  { label: "Chakra Healing", href: "/product/chakra-crystal-tree" },
-  { label: "Inner Peace", href: "/product/tigers-eye-focus-stone" },
-  { label: "Good Fortune", href: "/product/golden-vastu-turtle" },
-];
+// Shop By Intention — a visual, energy-first way in for the shopper. Each chip
+// opens the matching category, so the bar works as real navigation rather than
+// decoration.
+const intentions = categories.filter(
+  (category) => category.group === "intention",
+);
 
 export default function IntentionNav() {
   return (
@@ -23,9 +20,9 @@ export default function IntentionNav() {
         </p>
         <ul className="hide-scrollbar -mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 sm:justify-center">
           {intentions.map((intention) => (
-            <li key={intention.label} className="snap-start">
+            <li key={intention.slug} className="snap-start">
               <Link
-                href={intention.href}
+                href={`/category/${intention.slug}`}
                 prefetch
                 className="inline-flex whitespace-nowrap rounded-full border border-champagne-gold/25 bg-sand px-6 py-3 text-sm tracking-wide text-midnight-navy transition-all duration-300 ease-out hover:border-champagne-gold hover:bg-champagne-gold/25 hover:shadow-sm"
               >

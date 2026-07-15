@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProductById, products } from "@/lib/mockData";
-import AddToCartButton from "@/components/AddToCartButton";
+import { getCategoryBySlug, getProductById, products } from "@/lib/mockData";
+import { formatPrice } from "@/lib/format";
 import StickyAddToBag from "@/components/StickyAddToBag";
 import CompleteYourRitual from "@/components/CompleteYourRitual";
 import RitualAccordion from "@/components/RitualAccordion";
@@ -10,66 +11,61 @@ import YouMayAlsoLike from "@/components/YouMayAlsoLike";
 import ProductGallery from "@/components/ProductGallery";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
+import PincodeEstimator from "@/components/PincodeEstimator";
+import ProductCtas from "@/components/ProductCtas";
 
-// Minimalist risk-reversal cues shown beneath the primary CTA.
+// The four objections an Indian shopper brings to a crystal purchase: is the
+// stone real, can I pay cash on delivery, has it been energized, and will it sit
+// right in my home per Vastu. Answered directly beneath the primary CTA.
+const iconProps = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 18,
+  height: 18,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.4,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true,
+};
+
 const trustBadges = [
   {
-    label: "Authenticity Guaranteed",
+    label: "Lab Certified Authentic",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
+      <svg {...iconProps}>
         <path d="M12 3l7 3v5c0 4.4-3 8.2-7 9.5C8 19.2 5 15.4 5 11V6l7-3Z" />
         <path d="m9 11.5 2 2 4-4" />
       </svg>
     ),
   },
   {
-    label: "30-Day Easy Returns",
+    label: "Cash on Delivery (COD)",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M3 12a9 9 0 1 1 3 6.7" />
-        <path d="M3 21v-4h4" />
+      <svg {...iconProps}>
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <path d="M8 10h5" />
+        <path d="M8 13h3.5" />
+        <path d="M11 10a2.5 2.5 0 0 1 0 5H8l4 3" />
       </svg>
     ),
   },
   {
-    label: "Secure Checkout",
+    label: "Energized & Cleansed Before Dispatch",
     icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="4" y="10" width="16" height="10" rx="2" />
-        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+      <svg {...iconProps}>
+        <path d="M12 2.5 13.8 8l5.7.2-4.5 3.5 1.6 5.5-4.6-3.2-4.6 3.2 1.6-5.5L4.5 8.2 10.2 8Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Vastu Compliant",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5.5 9.5V20h13V9.5" />
+        <path d="m14 12-1.4 3.6L9 17l3.6 1.4L14 22l1.4-3.6L19 17l-3.6-1.4Z" />
       </svg>
     ),
   },
@@ -78,6 +74,32 @@ const trustBadges = [
 // Prerender a static page for each mock product.
 export function generateStaticParams() {
   return products.map((product) => ({ id: product.id }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const product = getProductById(id);
+
+  if (!product) return {};
+
+  return {
+    title: `${product.name} | OJARA`,
+    description: product.description,
+    openGraph: {
+      title: `${product.name} | OJARA`,
+      description: product.description,
+      images: [
+        {
+          url: product.image,
+          alt: product.name,
+        },
+      ],
+    },
+  };
 }
 
 export default async function ProductDetailPage({
@@ -91,6 +113,9 @@ export default async function ProductDetailPage({
   if (!product) {
     notFound();
   }
+
+  // Breadcrumb up into the category this piece was most likely found through.
+  const primaryCategory = getCategoryBySlug(product.intentions[0]);
 
   return (
     <div className="bg-ivory">
@@ -127,7 +152,19 @@ export default async function ProductDetailPage({
           <li aria-hidden="true" className="text-champagne-gold">
             /
           </li>
-          <li className="text-midnight-navy/70">{product.intention}</li>
+          <li className="text-midnight-navy/70">
+            {primaryCategory ? (
+              <Link
+                href={`/category/${primaryCategory.slug}`}
+                prefetch
+                className="transition-colors duration-300 ease-out hover:text-midnight-navy"
+              >
+                {primaryCategory.label}
+              </Link>
+            ) : (
+              product.intention
+            )}
+          </li>
           <li aria-hidden="true" className="text-champagne-gold">
             /
           </li>
@@ -137,47 +174,77 @@ export default async function ProductDetailPage({
         </ol>
       </nav>
 
-      {/* Split-screen: image left, details right */}
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 pb-24 lg:grid-cols-2 lg:gap-16">
-        <ProductGallery image={product.image} alt={product.name} />
+      {/* Split-screen: sticky image left, scrolling details right */}
+      <div className="mx-auto flex max-w-6xl flex-col px-6 pb-24 lg:flex-row lg:items-start lg:gap-16 gap-8">
 
-        <div className="flex flex-col justify-center">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs uppercase tracking-[0.35em] text-champagne-gold">
-              Manifestation &amp; Energy
-            </span>
+        {/* LEFT — sticky gallery.
+            Mobile: full-bleed escape via left-1/2 -translate-x-1/2 w-screen.
+            Desktop: pins to viewport while the right column scrolls past. */}
+        <div className="w-full relative left-1/2 -translate-x-1/2 w-screen overflow-hidden lg:left-auto lg:translate-x-0 lg:w-[55%] lg:overflow-visible lg:sticky lg:top-28 lg:self-start lg:h-fit">
+          <ProductGallery images={[product.image, "https://videos.pexels.com/video-files/35853514/15204260_1080_1920_30fps.mp4", product.image]} productName={product.name} />
+        </div>
+
+        {/* RIGHT — the tall column that scrolls past the pinned image */}
+        <div className="w-full lg:w-[45%] flex flex-col">
+          <h1 className="text-4xl text-midnight-navy sm:text-5xl">
+            {product.name}
             {product.isBundle && (
-              <span className="rounded-full bg-champagne-gold px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] text-midnight-navy">
+              <span className="ml-3 inline-block rounded-full bg-champagne-gold/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] text-champagne-gold align-middle">
                 ✦ Curated Harmony Set
               </span>
             )}
-          </div>
-
-          {/* Authentic, spiritual scarcity — only when genuinely low on hand */}
-          {product.stockCount < 5 && (
-            <p className="mt-4 text-sm tracking-wide text-champagne-gold">
-              ✦ Only {product.stockCount} pieces remaining — Energy-cleansed and
-              ready for your intention.
-            </p>
-          )}
-
-          <h1 className="mt-4 text-4xl text-midnight-navy sm:text-5xl">
-            {product.name}
           </h1>
 
-          <div className="mt-6 flex flex-wrap items-baseline gap-3">
-            <p className="text-2xl text-midnight-navy">${product.price}</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <p className="text-3xl font-bold text-midnight-navy">
+              {formatPrice(product.price)}
+            </p>
             {product.originalPrice && (
               <>
-                <p className="text-lg text-midnight-navy/40 line-through">
-                  ${product.originalPrice}
+                <p className="text-base text-midnight-navy/40 line-through">
+                  {formatPrice(product.originalPrice)}
                 </p>
-                <span className="rounded-full bg-champagne-gold/20 px-3 py-1 text-xs font-medium uppercase tracking-[0.15em] text-champagne-gold">
-                  Save ${product.originalPrice - product.price}
+                <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold rounded">
+                  Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                 </span>
               </>
             )}
           </div>
+
+          {/* Minimal Trust Badges */}
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-midnight-navy/85 uppercase">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-champagne-gold text-sm">💎</span>
+              Certified Natural
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-champagne-gold text-sm">✨</span>
+              Cleansed &amp; Energized
+            </span>
+          </div>
+
+          {/* The reason to buy, scannable in five seconds */}
+          <ul className="mt-8 space-y-3">
+            {product.benefits.map((benefit) => (
+              <li
+                key={benefit}
+                className="flex items-start gap-3 text-sm leading-6 text-midnight-navy/85"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 flex-shrink-0 text-champagne-gold"
+                >
+                  ✦
+                </span>
+                <span>{benefit}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Pincode Estimator */}
+          <PincodeEstimator />
+
+          <ProductCtas product={product} />
 
           {/* Intention — reinforces the brand story */}
           <div className="mt-8 rounded-2xl border border-champagne-gold/30 bg-sand/50 p-6">
@@ -187,7 +254,7 @@ export default async function ProductDetailPage({
             <p className="mt-2 font-heading text-3xl text-midnight-navy">
               {product.intention}
             </p>
-            <p className="mt-3 text-sm leading-6 text-midnight-navy/70">
+            <p className="mt-3 text-sm leading-6 text-midnight-navy/80">
               Charged with purpose and kept close — a daily reminder to{" "}
               {product.intention.toLowerCase()}, every day.
             </p>
@@ -196,21 +263,16 @@ export default async function ProductDetailPage({
           {/* Ritual accordions — energy, ritual, promise */}
           <RitualAccordion product={product} />
 
-          <div id="main-add-to-bag" className="mt-10">
-            <AddToCartButton
-              product={product}
-              className="w-full rounded-full bg-champagne-gold px-8 py-5 text-sm font-medium uppercase tracking-[0.25em] text-midnight-navy transition-colors hover:bg-champagne-gold/85 sm:w-auto sm:px-14"
-            />
-          </div>
-
-          {/* Risk reversal — minimalist trust badges */}
-          <ul className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-midnight-navy/70">
+          {/* Risk reversal — trust badges tuned to the Indian shopper */}
+          <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-midnight-navy/70 sm:grid-cols-2">
             {trustBadges.map((badge) => (
               <li
                 key={badge.label}
                 className="inline-flex items-center gap-2 text-xs tracking-wide sm:text-sm"
               >
-                <span className="text-champagne-gold">{badge.icon}</span>
+                <span className="flex-shrink-0 text-champagne-gold">
+                  {badge.icon}
+                </span>
                 <span>✦ {badge.label}</span>
               </li>
             ))}

@@ -2,18 +2,34 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { HONEYPOT_FIELD } from "@/lib/apiGuard";
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState(""); // honeypot — humans never fill this
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    // Frontend-only for now — wire to a real provider later.
-    setEmail("");
-    setSubmitted(true);
-    toast.success("✦ Welcome to the Inner Circle. Your journey begins.");
+    if (!email || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, [HONEYPOT_FIELD]: company }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Something went wrong.");
+      setEmail("");
+      setSubmitted(true);
+      toast.success("✦ Welcome to the Inner Circle. Your journey begins.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -25,7 +41,7 @@ export default function Newsletter() {
         <h2 className="mt-6 text-3xl uppercase tracking-[0.15em] text-midnight-navy sm:text-4xl">
           Join the Inner Circle
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-midnight-navy/60">
+        <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-midnight-navy/85">
           Early access to new collections, private releases, and the stories
           behind each stone.
         </p>
@@ -39,6 +55,23 @@ export default function Newsletter() {
             onSubmit={handleSubmit}
             className="mx-auto mt-12 flex max-w-md flex-col items-stretch gap-6 sm:flex-row sm:items-end"
           >
+            {/* Honeypot — off-screen, never focusable. Bots fill it; humans don't. */}
+            <input
+              type="text"
+              name={HONEYPOT_FIELD}
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: "1px",
+                height: "1px",
+                opacity: 0,
+              }}
+            />
             <input
               type="email"
               required
@@ -46,13 +79,14 @@ export default function Newsletter() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Your email address"
               aria-label="Email address"
-              className="flex-1 border-b border-champagne-gold bg-transparent px-1 py-3 text-center text-sm tracking-wide text-midnight-navy placeholder:text-warm-grey focus:border-midnight-navy focus:outline-none sm:text-left"
+              className="flex-1 rounded-md border border-midnight-navy/30 bg-transparent px-4 py-3 text-center text-sm tracking-wide text-midnight-navy placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy sm:text-left"
             />
             <button
               type="submit"
-              className="rounded-full bg-midnight-navy px-10 py-3.5 text-xs font-medium uppercase tracking-[0.25em] text-champagne-gold transition-colors hover:bg-midnight-navy/90"
+              disabled={submitting}
+              className="cursor-pointer rounded-full bg-midnight-navy px-10 py-3.5 text-xs font-medium uppercase tracking-[0.25em] text-champagne-gold transition-all duration-150 hover:bg-midnight-navy/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Subscribe
+              {submitting ? "Joining…" : "Subscribe"}
             </button>
           </form>
         )}

@@ -18,19 +18,34 @@ export default function AddToCartButton({
 }) {
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
+  const isOutOfStock = product.stockCount === 0;
 
   const handleClick = () => {
     addItem(product);
-    toast.success("✦ Added to your ritual", {
+    toast.success("✦ Added to Cart successfully!", {
       description: product.name,
+      style: {
+        background: "#10b981",
+        color: "#ffffff",
+        border: "none",
+      },
     });
     onAdded?.();
     openCart(); // slide the drawer open to confirm the addition
   };
 
   return (
-    <button type="button" onClick={handleClick} className={className}>
-      {children}
+    <button
+      type="button"
+      disabled={isOutOfStock}
+      onClick={handleClick}
+      className={
+        isOutOfStock
+          ? "w-full sm:w-auto rounded-full bg-gray-200 text-gray-400 border border-gray-300 px-3 py-1.5 sm:px-5 sm:py-2 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] cursor-not-allowed text-center"
+          : `cursor-pointer transition-all duration-150 active:scale-95 ${className}`
+      }
+    >
+      {isOutOfStock ? "Sold Out" : children}
     </button>
   );
 }

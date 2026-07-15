@@ -53,7 +53,7 @@ export default function SearchOverlay({
         type="button"
         aria-label="Close search"
         onClick={onClose}
-        className="absolute right-6 top-6 rounded-full p-2 text-champagne-gold transition-colors duration-300 ease-out hover:text-ivory"
+        className="absolute right-6 top-6 cursor-pointer rounded-full p-2 text-champagne-gold transition-all duration-150 hover:text-ivory active:scale-95"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -102,12 +102,12 @@ export default function SearchOverlay({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What are you seeking?"
             aria-label="Search sacred objects"
-            className="w-full bg-transparent pb-4 text-center font-heading text-3xl text-ivory placeholder:text-ivory/40 focus:outline-none sm:text-4xl"
+            className="w-full bg-transparent pb-4 text-center font-heading text-3xl text-ivory placeholder:text-ivory/70 focus:outline-none sm:text-4xl"
           />
         </form>
 
         <div className="mt-10 text-center">
-          <p className="text-xs uppercase tracking-[0.3em] text-ivory/50">
+          <p className="text-xs uppercase tracking-[0.3em] text-ivory/80">
             Trending Searches
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
@@ -117,7 +117,7 @@ export default function SearchOverlay({
                 href={item.href}
                 prefetch
                 onClick={onClose}
-                className="rounded-full border border-champagne-gold/30 px-5 py-2 text-sm tracking-wide text-ivory/90 transition-all duration-300 ease-out hover:border-champagne-gold hover:bg-champagne-gold/15"
+                className="cursor-pointer rounded-full border border-champagne-gold/30 px-5 py-2 text-sm tracking-wide text-ivory/90 transition-all duration-150 hover:border-champagne-gold hover:bg-champagne-gold/15 active:scale-95"
               >
                 {item.label}
               </Link>

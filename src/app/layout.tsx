@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import { Cinzel, Montserrat } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { WixClientContextProvider } from "@/context/wixContext";
 import Header from "@/components/Header";
-import Marquee from "@/components/Marquee";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
-import FloatingChatWidget from "@/components/FloatingChatWidget";
+import CheckoutModal from "@/components/CheckoutModal";
+import EnergyGuideChat from "@/components/EnergyGuideChat";
 import CookieBanner from "@/components/CookieBanner";
+import LenisProvider from "@/components/LenisProvider";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const cinzel = Cinzel({
   variable: "--font-cinzel",
@@ -16,7 +20,7 @@ const cinzel = Cinzel({
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
-  weight: "300",
+  weight: ["300", "400"],
   subsets: ["latin"],
 });
 
@@ -44,24 +48,31 @@ export default function RootLayout({
       className={`${cinzel.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        <Marquee />
-        <main className="flex-1 bg-ivory">{children}</main>
-        <Footer />
-        <CartDrawer />
-        <FloatingChatWidget />
-        <CookieBanner />
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "#071a47",
-              color: "#f7f3eb",
-              border: "1px solid rgba(214, 175, 122, 0.4)",
-              borderRadius: "9999px",
-            },
-          }}
-        />
+        {/* Every Wix-backed feature (auth, cart, checkout) reads the client from here */}
+        <WixClientContextProvider>
+          <LenisProvider>
+            <AnnouncementBar />
+            <Header />
+            <main className="flex-1 bg-ivory">{children}</main>
+            <Footer />
+            <CartDrawer />
+            <CheckoutModal />
+            <EnergyGuideChat />
+            <CookieBanner />
+            <MobileBottomNav />
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                style: {
+                  background: "#071a47",
+                  color: "#f7f3eb",
+                  border: "1px solid rgba(214, 175, 122, 0.4)",
+                  borderRadius: "9999px",
+                },
+              }}
+            />
+          </LenisProvider>
+        </WixClientContextProvider>
       </body>
     </html>
   );

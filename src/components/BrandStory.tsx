@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function BrandStory() {
   return (
-    <section className="border-y border-champagne-gold/20 bg-midnight-navy text-ivory">
+    <section className="border-y border-champagne-gold/30 bg-midnight-navy text-ivory">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-0 lg:grid-cols-2">
         {/* Tall crystal image */}
         <div className="relative min-h-[28rem] lg:min-h-[42rem]">
@@ -28,7 +28,7 @@ export default function BrandStory() {
             of Ojas
           </h2>
 
-          <div className="mt-10 space-y-6 text-base leading-8 text-ivory/75">
+          <div className="mt-10 space-y-6 text-base leading-8 text-ivory/90">
             <p>
               In ancient wisdom, <span className="text-champagne-gold">Ojas</span>{" "}
               is the vital essence — the quiet energy and radiance that lives

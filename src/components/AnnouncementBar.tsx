@@ -1,7 +1,10 @@
+// The site's top trust bar. Sits above the Header so the three objections an
+// Indian shopper has (is it real? can I pay on delivery? what's shipping cost?)
+// are answered before they scroll.
 const PHRASE =
-  "✦ FREE GLOBAL SHIPPING ✦ ETHICALLY SOURCED CRYSTALS ✦ CLEANSED & CHARGED ✦ MAGNIFY YOUR INTENTION ✦";
+  "✦ 100% ORIGINAL LAB CERTIFIED CRYSTALS ✦ CASH ON DELIVERY AVAILABLE ✦ FREE PAN-INDIA SHIPPING ✦";
 
-export default function Marquee() {
+export default function AnnouncementBar() {
   return (
     <div className="overflow-hidden bg-champagne-gold py-2.5 text-midnight-navy">
       {/* Two identical halves; translating the track -50% loops seamlessly */}

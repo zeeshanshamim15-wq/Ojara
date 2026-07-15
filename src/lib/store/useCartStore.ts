@@ -14,13 +14,18 @@ const RECENTLY_VIEWED_LIMIT = 8;
 interface CartState {
   cartItems: CartItem[];
   isCartOpen: boolean;
+  // The checkout modal (opened from the cart's "ORDER NOW"). Never persisted.
+  isCheckoutOpen: boolean;
   // Product IDs, most-recent first. Powers the "Recently Viewed" rails.
   recentlyViewed: string[];
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
+  openCheckout: () => void;
+  closeCheckout: () => void;
   addRecentlyViewed: (productId: string) => void;
 }
 
@@ -29,6 +34,7 @@ export const useCartStore = create<CartState>()(
     (set) => ({
       cartItems: [],
       isCartOpen: false,
+      isCheckoutOpen: false,
       recentlyViewed: [],
 
       addItem: (product) =>
@@ -59,10 +65,23 @@ export const useCartStore = create<CartState>()(
           ),
         })),
 
+      updateQuantity: (productId, quantity) =>
+        set((state) => ({
+          cartItems: state.cartItems.map((item) =>
+            item.product.id === productId
+              ? { ...item, quantity: Math.max(1, quantity) }
+              : item,
+          ),
+        })),
+
       clearCart: () => set({ cartItems: [] }),
 
       openCart: () => set({ isCartOpen: true }),
       closeCart: () => set({ isCartOpen: false }),
+
+      // Opening checkout closes the cart drawer so they don't stack.
+      openCheckout: () => set({ isCheckoutOpen: true, isCartOpen: false }),
+      closeCheckout: () => set({ isCheckoutOpen: false }),
 
       addRecentlyViewed: (productId) =>
         set((state) => ({

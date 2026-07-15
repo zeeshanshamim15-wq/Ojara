@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { getProductById, type Product } from "@/lib/mockData";
+import { formatPrice } from "@/lib/format";
 import AddToCartButton from "@/components/AddToCartButton";
 
 type Intention = "Wealth" | "Protection" | "Peace";
@@ -105,7 +106,7 @@ export default function EnergyQuiz({
           type="button"
           aria-label="Close quiz"
           onClick={onClose}
-          className="absolute right-5 top-5 z-10 rounded-full p-1 text-midnight-navy/60 transition-colors hover:text-midnight-navy"
+          className="absolute right-5 top-5 z-10 cursor-pointer rounded-full p-1 text-midnight-navy/70 transition-all duration-150 hover:text-midnight-navy active:scale-95"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -171,7 +172,7 @@ export default function EnergyQuiz({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="mt-2 text-xs uppercase tracking-[0.2em] text-midnight-navy/50 transition-colors hover:text-midnight-navy"
+                className="mt-2 cursor-pointer text-xs uppercase tracking-[0.2em] text-midnight-navy/70 transition-colors hover:text-midnight-navy active:scale-95"
               >
                 ← Back
               </button>
@@ -184,7 +185,7 @@ export default function EnergyQuiz({
               <h3 className="font-heading text-2xl text-midnight-navy sm:text-3xl">
                 Your Perfect Match
               </h3>
-              <p className="mt-2 text-sm text-midnight-navy/60">
+              <p className="mt-2 text-sm text-midnight-navy/70">
                 For {intention?.toLowerCase()}, worn as {style?.toLowerCase()}.
               </p>
 
@@ -206,7 +207,7 @@ export default function EnergyQuiz({
                     {match.name}
                   </h4>
                   <p className="mt-1 text-sm text-midnight-navy/70">
-                    ${match.price}
+                    {formatPrice(match.price)}
                   </p>
                 </div>
               </div>
@@ -215,7 +216,7 @@ export default function EnergyQuiz({
                 <AddToCartButton
                   product={match}
                   onAdded={onClose}
-                  className="w-full rounded-full bg-champagne-gold px-8 py-4 text-xs font-medium uppercase tracking-[0.25em] text-midnight-navy transition-colors duration-300 ease-out hover:bg-champagne-gold/85"
+                  className="w-full cursor-pointer rounded-full bg-champagne-gold px-8 py-4 text-xs font-medium uppercase tracking-[0.25em] text-midnight-navy transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95"
                 >
                   Add to Bag
                 </AddToCartButton>
@@ -224,7 +225,7 @@ export default function EnergyQuiz({
               <button
                 type="button"
                 onClick={reset}
-                className="mt-5 text-xs uppercase tracking-[0.2em] text-midnight-navy/50 transition-colors hover:text-midnight-navy"
+                className="mt-5 cursor-pointer text-xs uppercase tracking-[0.2em] text-midnight-navy/70 transition-colors hover:text-midnight-navy active:scale-95"
               >
                 ↺ Retake the quiz
               </button>
@@ -266,13 +267,13 @@ function QuizOption({
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-center justify-between gap-4 rounded-2xl border border-champagne-gold/25 bg-sand/40 px-6 py-5 text-left transition-all duration-300 ease-out hover:border-champagne-gold hover:bg-champagne-gold/15"
+      className="group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-champagne-gold/25 bg-sand/40 px-6 py-5 text-left transition-all duration-150 hover:border-champagne-gold hover:bg-champagne-gold/15 active:scale-[0.98]"
     >
       <span>
         <span className="block font-heading text-lg tracking-wide text-midnight-navy">
           {label}
         </span>
-        <span className="mt-0.5 block text-xs text-midnight-navy/55">
+        <span className="mt-0.5 block text-xs text-midnight-navy/70">
           {caption}
         </span>
       </span>

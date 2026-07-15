@@ -41,9 +41,9 @@ export default function Hero() {
           <Link
             href="#collection"
             prefetch
-            className="inline-flex items-center justify-center rounded-full border border-champagne-gold bg-champagne-gold px-8 py-3.5 text-xs font-normal uppercase tracking-[0.25em] text-midnight-navy transition-colors duration-300 ease-out hover:bg-transparent hover:text-champagne-gold sm:px-10 sm:text-sm"
+            className="cursor-pointer inline-flex items-center justify-center rounded-full border border-champagne-gold bg-champagne-gold px-8 py-3.5 text-xs font-normal uppercase tracking-[0.25em] text-midnight-navy transition-all duration-150 ease-out hover:bg-transparent hover:text-champagne-gold active:scale-95 sm:px-10 sm:text-sm"
           >
-            Shop Now
+            Shop the Collection
           </Link>
 
           {/* Personalisation quiz — owns its own modal state */}

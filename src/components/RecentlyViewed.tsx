@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getProductById } from "@/lib/mockData";
+import { formatPrice } from "@/lib/format";
 import { useCartStore, useCartHydrated } from "@/lib/store/useCartStore";
 
 /**
@@ -57,12 +58,12 @@ export default function RecentlyViewed({
                     className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   />
                 </div>
-                <div className="min-w-0 flex-1 text-left">
+                 <div className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm text-midnight-navy">
                     {product.name}
                   </p>
-                  <p className="text-sm text-midnight-navy/60">
-                    ${product.price}
+                  <p className="text-sm text-midnight-navy/85">
+                    {formatPrice(product.price)}
                   </p>
                 </div>
               </Link>
@@ -74,7 +75,7 @@ export default function RecentlyViewed({
   }
 
   return (
-    <section className="border-t border-champagne-gold/20 bg-sand px-6 py-16 sm:py-20">
+    <section className="border-t border-champagne-gold/30 bg-sand px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center sm:mb-12">
           <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">
@@ -91,7 +92,7 @@ export default function RecentlyViewed({
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:shadow-xl hover:shadow-champagne-gold/20"
+              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-champagne-gold/20 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image
@@ -106,8 +107,8 @@ export default function RecentlyViewed({
                 <h3 className="text-sm text-midnight-navy sm:text-base">
                   {product.name}
                 </h3>
-                <span className="text-sm text-midnight-navy sm:text-base">
-                  ${product.price}
+                <span className="flex-shrink-0 text-sm text-midnight-navy sm:text-base">
+                  {formatPrice(product.price)}
                 </span>
               </div>
             </Link>

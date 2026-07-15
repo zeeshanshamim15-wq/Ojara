@@ -1,0 +1,441 @@
+import { NextResponse } from "next/server";
+import { WIX_ADMIN_ENABLED } from "@/lib/commerce/config";
+import {
+  sendOrderConfirmationEmail,
+  type OrderEmailParams,
+} from "@/lib/orderEmail";
+
+// ============================================================================
+// Checkout orchestrator (bundle §8) — the heart of the order flow.
+//
+// TWO modes, chosen by whether the Wix admin key is present:
+//
+//  • LIVE  (WIX_ADMIN_ENABLED): the full Viora path — stamp buyer/shipping onto
+//    the Wix checkout, auto-select a carrier, create + approve the order,
+//    reconcile the prepaid discount via a draft-order edit, mark the payment
+//    paid, and send the confirmation email inline (there is NO Wix webhook).
+//
+//  • MOCK  (no keys yet): synthesise an order id from the client-supplied cart
+//    items + totals and STILL send the real confirmation email, so the whole
+//    flow — including the branded email — is verifiable before Wix exists.
+//
+// ⚠️ Wix's automatic order-confirmation email MUST be turned OFF in the dashboard
+//    once live, or customers get two (bundle §0.2).
+// ============================================================================
+
+type CheckoutAddressPayload = {
+  email: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  paymentMethod: "COD" | "PREPAID";
+  razorpayPaymentId?: string;
+  razorpayAmount?: string;
+};
+
+const normalizeText = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+
+const getWixErrorMessage = (err: unknown) => {
+  const e = err as
+    | { details?: { applicationError?: { description?: string; code?: string } }; message?: string }
+    | undefined;
+  return (
+    e?.details?.applicationError?.description ||
+    e?.details?.applicationError?.code ||
+    e?.message ||
+    "Unknown Wix error"
+  );
+};
+
+const splitName = (fullName: string) => {
+  const parts = fullName.split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || fullName,
+    lastName: parts.length > 1 ? parts.slice(1).join(" ") : undefined,
+  };
+};
+
+// Wix requires ISO 3166-2 subdivision CODES, not free text.
+const subdivisionCodes: Record<string, string> = {
+  "andhra pradesh": "IN-AP",
+  assam: "IN-AS",
+  bihar: "IN-BR",
+  chhattisgarh: "IN-CT",
+  delhi: "IN-DL",
+  goa: "IN-GA",
+  gujarat: "IN-GJ",
+  haryana: "IN-HR",
+  "himachal pradesh": "IN-HP",
+  jharkhand: "IN-JH",
+  karnataka: "IN-KA",
+  kerala: "IN-KL",
+  "madhya pradesh": "IN-MP",
+  maharashtra: "IN-MH",
+  odisha: "IN-OR",
+  punjab: "IN-PB",
+  rajasthan: "IN-RJ",
+  "tamil nadu": "IN-TN",
+  telangana: "IN-TG",
+  "uttar pradesh": "IN-UP",
+  uttarakhand: "IN-UT",
+  "west bengal": "IN-WB",
+};
+
+const normalizeSubdivision = (state: string) => {
+  const normalized = state.trim();
+  if (/^IN-[A-Z]{2}$/i.test(normalized)) return normalized.toUpperCase();
+  return subdivisionCodes[normalized.toLowerCase()] || normalized;
+};
+
+// Wix nests calculation errors unpredictably — flatten whatever shape arrives.
+const flattenCalculationErrors = (value: unknown): string[] => {
+  if (!value) return [];
+  if (typeof value === "string") return value.trim() ? [value.trim()] : [];
+  if (Array.isArray(value)) return value.flatMap(flattenCalculationErrors);
+  if (typeof value !== "object") return [];
+
+  const record = value as Record<string, unknown>;
+  const keys = ["description", "message", "code", "field", "violatedRule"];
+  const ownMessages = keys
+    .map((k) => record[k])
+    .filter((i): i is string => typeof i === "string" && i.trim().length > 0);
+
+  return [
+    ...ownMessages,
+    ...Object.entries(record)
+      .filter(([key]) => !keys.includes(key))
+      .flatMap(([, nested]) => flattenCalculationErrors(nested)),
+  ];
+};
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const details = body?.details as Partial<CheckoutAddressPayload> | undefined;
+
+    const email = normalizeText(details?.email);
+    const fullName = normalizeText(details?.fullName);
+    const phone = normalizeText(details?.phone);
+    const addressLine1 = normalizeText(details?.addressLine1);
+    const addressLine2 = normalizeText(details?.addressLine2);
+    const city = normalizeText(details?.city);
+    const state = normalizeText(details?.state);
+    const postalCode = normalizeText(details?.postalCode);
+    const paymentMethod = details?.paymentMethod === "PREPAID" ? "PREPAID" : "COD";
+    const razorpayPaymentId = normalizeText(details?.razorpayPaymentId);
+    const razorpayAmount = normalizeText(details?.razorpayAmount);
+
+    if (!email || !fullName || !phone || !addressLine1 || !city || !state || !postalCode) {
+      return NextResponse.json(
+        { error: "Missing checkout contact or shipping details." },
+        { status: 400 },
+      );
+    }
+
+    const checkoutId = normalizeText(body?.checkoutId);
+
+    // ------------------------------------------------------------------ MOCK
+    // No Wix admin key (or no checkoutId): synthesise the order and email from the
+    // client-supplied cart. This is what runs pre-keys.
+    if (!WIX_ADMIN_ENABLED || !checkoutId) {
+      const items = (Array.isArray(body?.items) ? body.items : []) as
+        OrderEmailParams["items"];
+      const summary = (body?.summary || {}) as OrderEmailParams["summary"];
+      const amount = normalizeText(body?.amount) || summary?.total || "0";
+
+      const orderId = `MOCK-${Date.now().toString(36).toUpperCase()}`;
+      const orderNumber = `#${orderId.slice(-8)}`;
+      const orderDate = new Date().toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      await sendOrderConfirmationEmail({
+        to: email,
+        customerName: fullName,
+        orderNumber,
+        orderDate,
+        paymentMethod,
+        amount,
+        razorpayPaymentId: razorpayPaymentId || undefined,
+        items,
+        summary,
+        address: { line1: addressLine1, city, state, postalCode },
+        phone,
+      }).catch((e) => console.error("Mock order email failed:", e));
+
+      return NextResponse.json({ orderId, orderNumber, mock: true });
+    }
+
+    // ------------------------------------------------------------------ LIVE
+    // Full Wix order creation. Only reached when the admin key + a real Wix
+    // checkoutId are present. (Bundle §8, ported verbatim in spirit.)
+    const { wixAdminClientServer } = await import("@/lib/wixAdminClientServer");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wixClient = wixAdminClientServer() as any;
+    const contactDetails = splitName(fullName);
+    const address = {
+      country: "IN",
+      addressLine1,
+      ...(addressLine2 ? { addressLine2 } : {}),
+      city,
+      subdivision: normalizeSubdivision(state),
+      postalCode,
+    };
+
+    // 1. Stamp buyer / billing / shipping onto the Wix checkout.
+    let updatedCheckout = await wixClient.checkout.updateCheckout(checkoutId, {
+      billingInfo: { address, contactDetails: { ...contactDetails, phone } },
+      shippingInfo: {
+        shippingDestination: {
+          address,
+          contactDetails: { ...contactDetails, phone },
+        },
+      },
+      buyerInfo: { email },
+      buyerNote:
+        paymentMethod === "COD"
+          ? `Payment: Cash on Delivery (COD). Phone: ${phone}. Pincode: ${postalCode}.`
+          : `Payment: Prepaid. Phone: ${phone}. Pincode: ${postalCode}.` +
+            (razorpayPaymentId ? ` Razorpay Payment ID: ${razorpayPaymentId}.` : "") +
+            (razorpayAmount ? ` Amount paid: ${razorpayAmount}.` : ""),
+      customFields: [
+        {
+          title: "Payment Method",
+          value: paymentMethod === "COD" ? "Cash on Delivery" : "Prepaid (Razorpay)",
+        },
+        { title: "Customer Phone", value: phone },
+        ...(razorpayPaymentId
+          ? [{ title: "Razorpay Payment ID", value: razorpayPaymentId }]
+          : []),
+        ...(razorpayAmount ? [{ title: "Amount Paid", value: razorpayAmount }] : []),
+      ],
+    });
+
+    // 2. Auto-select a shipping option — Wix REFUSES createOrder without one.
+    const shippingOptions =
+      updatedCheckout?.shippingInfo?.carrierServiceOptions || [];
+    if (shippingOptions.length > 0) {
+      updatedCheckout = await wixClient.checkout.updateCheckout(checkoutId, {
+        shippingInfo: {
+          ...updatedCheckout.shippingInfo,
+          selectedCarrierServiceOption: shippingOptions[0],
+        },
+      });
+    }
+
+    // 3. Bail early on calculation errors (else createOrder fails opaquely).
+    const calcErrors = Array.from(
+      new Set(flattenCalculationErrors(updatedCheckout?.calculationErrors)),
+    );
+    if (calcErrors.length > 0) {
+      return NextResponse.json(
+        { error: `Wix checkout calculation errors: ${calcErrors.join("; ")}` },
+        { status: 422 },
+      );
+    }
+
+    // 4. Create + approve the order.
+    const orderResult = await wixClient.checkout.createOrder(checkoutId);
+    const orderId =
+      orderResult?.orderId || orderResult?.order?._id || orderResult?._id;
+
+    if (!orderId) {
+      return NextResponse.json(
+        { error: "Wix created the order but returned no order ID." },
+        { status: 502 },
+      );
+    }
+
+    const approvedOrderResult = await wixClient.orders.updateOrderStatus(
+      orderId,
+      "APPROVED",
+    );
+
+    const wixOrderTotal = Number(
+      updatedCheckout?.priceSummary?.total?.amount ??
+        approvedOrderResult?.order?.priceSummary?.total?.amount ??
+        orderResult?.order?.priceSummary?.total?.amount,
+    );
+
+    // 5. Prepaid discount reconciliation (see §8 for the full rationale).
+    // Best-effort: on any failure the original order stands and we record the
+    // real amount paid. Never blocks the order.
+    let finalTotal = wixOrderTotal;
+    let committedOrder: Record<string, unknown> | null = null;
+    let discountApplied = false;
+
+    if (paymentMethod === "PREPAID" && razorpayPaymentId) {
+      const amountPaid = Number(razorpayAmount);
+      if (
+        Number.isFinite(amountPaid) &&
+        Number.isFinite(wixOrderTotal) &&
+        amountPaid > 0 &&
+        amountPaid < wixOrderTotal
+      ) {
+        const discount = Number((wixOrderTotal - amountPaid).toFixed(2));
+        try {
+          const draftRes = await wixClient.draftOrders.createDraftOrder({
+            sourceOrderId: orderId,
+          });
+          const draftId =
+            draftRes?.calculatedDraftOrder?.draftOrder?._id ||
+            draftRes?.draftOrder?._id;
+          if (!draftId) throw new Error("Draft order id missing from response.");
+
+          await wixClient.draftOrders.createCustomDiscounts(draftId, {
+            discounts: [
+              {
+                priceAmount: { amount: discount.toFixed(2) },
+                discountType: "GLOBAL",
+                applyToDraftOrder: true,
+                description: "Online payment discount",
+              },
+            ],
+          });
+
+          const commitRes = await wixClient.draftOrders.commitDraftOrder(draftId, {
+            commitSettings: {
+              sendNotificationsToBuyer: false,
+              sendNotificationsToBusiness: false,
+            },
+            reason: "Online payment (prepaid) discount",
+          });
+
+          committedOrder = commitRes?.orderAfterCommit || null;
+          const committedTotal = committedOrder?.priceSummary as
+            | { total?: { amount?: string } }
+            | undefined;
+          finalTotal =
+            committedTotal?.total?.amount != null
+              ? Number(committedTotal.total.amount)
+              : amountPaid;
+          discountApplied = true;
+        } catch (discErr) {
+          console.error("Prepaid discount (draft edit) failed:", discErr);
+          finalTotal = amountPaid;
+        }
+      }
+    }
+
+    // 6. Record the payment so the order reads as PAID for finalTotal.
+    let paymentMarkedPaid = false;
+    if (paymentMethod === "PREPAID" && razorpayPaymentId) {
+      try {
+        if (Number.isFinite(finalTotal) && finalTotal > 0) {
+          await wixClient.orderTransactions.addPayments(orderId, [
+            {
+              amount: { amount: finalTotal.toFixed(2) },
+              regularPaymentDetails: {
+                offlinePayment: true,
+                status: "APPROVED",
+                paymentMethod: "Razorpay",
+                providerTransactionId: razorpayPaymentId,
+              },
+            },
+          ]);
+          paymentMarkedPaid = true;
+        }
+      } catch (payErr) {
+        console.error("Failed to mark prepaid Wix order as paid:", payErr);
+      }
+    }
+
+    // 7. Confirmation email (the "webhook" — fired inline).
+    try {
+      const finalOrder =
+        committedOrder ||
+        approvedOrderResult?.order ||
+        orderResult?.order;
+
+      const emailAmount = Number.isFinite(finalTotal) ? finalTotal : wixOrderTotal;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const items = (((finalOrder as any)?.lineItems as any[]) || []).map((li) => ({
+        name: li?.productName?.original || li?.productName?.translated || "Item",
+        quantity: Number(li?.quantity) || 1,
+        sku: li?.physicalProperties?.sku || li?.catalogReference?.options?.sku || undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        options: ((li?.descriptionLines as any[]) || [])
+          .map((dl) => ({
+            name: dl?.name?.original || dl?.name?.translated || "",
+            value:
+              dl?.colorInfo?.original ||
+              dl?.colorInfo?.translated ||
+              dl?.plainText?.original ||
+              dl?.plainText?.translated ||
+              "",
+          }))
+          .filter((o) => o.name && o.value),
+        unitPrice: li?.price?.amount || undefined,
+        lineTotal:
+          li?.totalPriceAfterTax?.amount ||
+          li?.totalPriceBeforeTax?.amount ||
+          li?.price?.amount ||
+          undefined,
+        image: li?.image || undefined,
+      }));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fo = finalOrder as any;
+      const rawOrderNumber = fo?.number;
+      const hasValidOrderNumber =
+        rawOrderNumber != null &&
+        String(rawOrderNumber).trim() !== "" &&
+        String(rawOrderNumber).trim() !== "0";
+      const orderNumber = hasValidOrderNumber
+        ? `#${rawOrderNumber}`
+        : `#${String(orderId).slice(-8)}`;
+
+      const ps = fo?.priceSummary || {};
+      const summary = {
+        subtotal: ps?.subtotal?.amount || undefined,
+        shipping: ps?.shipping?.amount || undefined,
+        tax: ps?.tax?.amount || undefined,
+        discount: ps?.discount?.amount || undefined,
+        total:
+          ps?.total?.amount ||
+          (Number.isFinite(emailAmount) ? emailAmount.toFixed(2) : undefined),
+      };
+
+      const createdDate = fo?._createdDate || fo?.createdDate || Date.now();
+      const orderDate = new Date(createdDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      await sendOrderConfirmationEmail({
+        to: email,
+        customerName: fullName,
+        orderNumber,
+        orderDate,
+        paymentMethod,
+        amount: (Number.isFinite(emailAmount) ? emailAmount : 0).toFixed(2),
+        razorpayPaymentId: razorpayPaymentId || undefined,
+        items,
+        summary,
+        address: { line1: addressLine1, city, state, postalCode },
+        phone,
+      });
+    } catch (emailErr) {
+      console.error("Order confirmation email step failed:", emailErr);
+    }
+
+    return NextResponse.json({
+      checkoutId,
+      orderId,
+      paymentMarkedPaid,
+      discountApplied,
+      finalTotal: Number.isFinite(finalTotal) ? finalTotal : undefined,
+    });
+  } catch (err: unknown) {
+    console.error("Wix checkout finalization failed:", err);
+    return NextResponse.json({ error: getWixErrorMessage(err) }, { status: 500 });
+  }
+}

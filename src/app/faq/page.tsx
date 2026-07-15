@@ -53,7 +53,7 @@ export default function FaqPage() {
         <Link
           href="/"
           prefetch
-          className="text-xs uppercase tracking-[0.2em] text-midnight-navy/60 transition-colors duration-300 ease-out hover:text-midnight-navy"
+          className="cursor-pointer inline-block text-xs uppercase tracking-[0.2em] text-midnight-navy/70 transition-all duration-150 ease-out hover:text-midnight-navy active:scale-95"
         >
           ← Back to OJARA
         </Link>
@@ -74,11 +74,11 @@ export default function FaqPage() {
 
         <FaqAccordion items={faqs} />
 
-        <p className="mt-16 border-t border-champagne-gold/25 pt-8 text-center text-sm leading-7 text-midnight-navy/60">
+        <p className="mt-16 border-t border-champagne-gold/30 pt-8 text-center text-sm leading-7 text-midnight-navy/70">
           Still curious? Write to us at{" "}
           <a
             href="mailto:care@ojara.com"
-            className="text-champagne-gold underline-offset-4 hover:underline"
+            className="text-champagne-gold font-medium underline-offset-4 hover:underline"
           >
             care@ojara.com
           </a>

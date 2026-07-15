@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { products } from "@/lib/mockData";
+import { formatPrice } from "@/lib/format";
 
 /**
  * Bottom-of-page cross-sell. Rotates the catalogue so it starts just after the
@@ -18,7 +19,7 @@ export default function YouMayAlsoLike({ currentId }: { currentId: string }) {
     .slice(0, 4);
 
   return (
-    <section className="border-t border-champagne-gold/20 bg-ivory px-6 py-16 sm:py-24">
+    <section className="border-t border-champagne-gold/30 bg-ivory px-6 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mb-10 text-center sm:mb-14">
           <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">
@@ -35,7 +36,7 @@ export default function YouMayAlsoLike({ currentId }: { currentId: string }) {
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="group flex flex-col"
+              className="cursor-pointer group flex flex-col transition-all duration-150 hover:-translate-y-1 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 ease-out group-hover:shadow-xl group-hover:shadow-champagne-gold/20">
                 <Image
@@ -53,8 +54,8 @@ export default function YouMayAlsoLike({ currentId }: { currentId: string }) {
                 <h3 className="mt-2 text-sm text-midnight-navy sm:text-base">
                   {product.name}
                 </h3>
-                <p className="mt-1 text-sm text-midnight-navy/70">
-                  ${product.price}
+                <p className="mt-1 text-sm text-midnight-navy/85">
+                  {formatPrice(product.price)}
                 </p>
               </div>
             </Link>

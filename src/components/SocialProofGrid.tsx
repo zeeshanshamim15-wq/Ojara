@@ -54,7 +54,7 @@ const InstagramIcon = () => (
 
 export default function SocialProofGrid() {
   return (
-    <section className="border-y border-champagne-gold/20 bg-ivory px-6 py-20 sm:py-24">
+    <section className="border-y border-champagne-gold/30 bg-ivory px-6 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center sm:mb-14">
           <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-champagne-gold">
@@ -66,13 +66,12 @@ export default function SocialProofGrid() {
           <h2 className="mt-5 text-3xl uppercase tracking-[0.15em] text-midnight-navy sm:text-4xl">
             The Ojara Community
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-midnight-navy/60">
-            Spotted in the wild. Tag <span className="text-champagne-gold">@ojara</span>{" "}
-            to see your ritual featured.
+          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-midnight-navy/70">
+            Tag <span className="text-champagne-gold font-medium">@ojara</span> to see your ritual featured.
           </p>
         </div>
 
-        <div className="grid auto-rows-[9rem] grid-cols-2 gap-3 overflow-hidden rounded-2xl border border-champagne-gold/20 sm:auto-rows-[11rem] sm:grid-cols-4 sm:gap-4 sm:border-0 sm:rounded-none">
+        <div className="grid auto-rows-[9rem] grid-cols-2 gap-3 overflow-hidden rounded-2xl border border-champagne-gold/30 sm:auto-rows-[11rem] sm:grid-cols-4 sm:gap-4 sm:border-0 sm:rounded-none">
           {posts.map((post) => (
             <a
               key={post.id}
@@ -80,7 +79,7 @@ export default function SocialProofGrid() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View on Instagram"
-              className={`group relative overflow-hidden rounded-none bg-sand sm:rounded-xl ${post.span}`}
+              className={`cursor-pointer group relative overflow-hidden rounded-none bg-sand transition-all duration-150 active:scale-95 sm:rounded-xl ${post.span}`}
             >
               <Image
                 src={img(post.id)}

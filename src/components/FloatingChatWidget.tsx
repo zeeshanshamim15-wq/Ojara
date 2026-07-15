@@ -79,7 +79,7 @@ export default function FloatingChatWidget() {
             <p className="font-heading text-base tracking-wide text-champagne-gold">
               Ojara Energy Guide
             </p>
-            <p className="flex items-center gap-1.5 text-xs text-ivory/60">
+            <p className="flex items-center gap-1.5 text-xs text-ivory/70">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
               Online now
             </p>
@@ -88,7 +88,7 @@ export default function FloatingChatWidget() {
             type="button"
             aria-label="Close chat"
             onClick={() => setOpen(false)}
-            className="rounded-full p-1 text-ivory/70 transition-colors hover:text-ivory"
+            className="cursor-pointer rounded-full p-1 text-ivory/70 transition-all duration-150 hover:text-ivory active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -148,12 +148,12 @@ export default function FloatingChatWidget() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Ask about a crystal or consultation…"
             aria-label="Message the Energy Guide"
-            className="flex-1 rounded-full bg-sand/50 px-4 py-2.5 text-sm text-midnight-navy placeholder:text-warm-grey focus:outline-none focus:ring-2 focus:ring-champagne-gold/40"
+            className="flex-1 rounded-md border border-midnight-navy/30 bg-white/40 px-4 py-2.5 text-sm text-midnight-navy placeholder:text-midnight-navy/60 focus:border-champagne-gold focus:outline-none focus:ring-2 focus:ring-champagne-gold/30"
           />
           <button
             type="submit"
             aria-label="Send message"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-champagne-gold text-midnight-navy transition-transform duration-300 ease-out hover:scale-105"
+            className="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-champagne-gold text-midnight-navy transition-all duration-150 hover:scale-105 active:scale-95"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -180,7 +180,7 @@ export default function FloatingChatWidget() {
         aria-label={open ? "Close Energy Guide chat" : "Chat with an Energy Guide"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="group flex items-center gap-0 self-end rounded-full bg-champagne-gold py-3 pl-5 pr-3 text-midnight-navy shadow-lg shadow-midnight-navy/25 outline-none ring-champagne-gold/40 transition-all duration-500 ease-out hover:shadow-xl focus-visible:ring-4"
+        className="group flex cursor-pointer items-center gap-0 self-end rounded-full bg-champagne-gold py-3 pl-5 pr-3 text-midnight-navy shadow-lg shadow-midnight-navy/25 outline-none ring-champagne-gold/40 transition-all duration-150 hover:shadow-xl focus-visible:ring-4 active:scale-95"
       >
         {/* Label collapses when the window is open (icon becomes a close affordance) */}
         <span

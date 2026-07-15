@@ -18,24 +18,24 @@ interface Section {
 export default function RitualAccordion({ product }: { product: Product }) {
   const sections: Section[] = [
     {
-      key: "energy",
-      title: "The Energy",
+      key: "description",
+      title: "Description",
       body: `${product.description} Attuned to ${product.intention.toLowerCase()}, its frequency is meant to be felt as much as seen — a quiet current you keep close.`,
     },
     {
-      key: "ritual",
-      title: "The Ritual",
+      key: "rituals",
+      title: "Crystal Rituals",
       body: "Cleanse with sage smoke or a night of moonlight to recharge its frequency. Hold it between your palms, breathe slowly, and speak your intention aloud — then place it where its work begins: your desk, your threshold, your bedside.",
     },
     {
-      key: "promise",
-      title: "The Promise",
-      body: "Ethically sourced, cleansed before shipping, and dispatched with care. Every piece is backed by our 30-day authentic returns — because your intention deserves the real thing.",
+      key: "shipping",
+      title: "Shipping & Returns",
+      body: "Free standard delivery on all PAN-India orders. Orders dispatch within 24-48 hours. Returns or replacements accepted within 30 days of delivery if the piece doesn't resonate.",
     },
   ];
 
   // First chapter open by default so the section never reads as empty.
-  const [open, setOpen] = useState<string | null>("energy");
+  const [open, setOpen] = useState<string | null>("description");
 
   return (
     <div className="mt-8 divide-y divide-champagne-gold/25 border-y border-champagne-gold/25">
@@ -48,7 +48,7 @@ export default function RitualAccordion({ product }: { product: Product }) {
                 type="button"
                 onClick={() => setOpen(isOpen ? null : section.key)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center justify-between gap-4 py-5 text-left"
+                className="flex w-full cursor-pointer items-center justify-between gap-4 py-5 text-left transition-all duration-150 active:scale-[0.99]"
               >
                 <span className="font-heading text-lg tracking-[0.05em] text-midnight-navy">
                   {section.title}

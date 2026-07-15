@@ -10,15 +10,17 @@
   --color-foreground: var(--foreground);
 
   /* Brand color palette */
-  --color-midnight-navy: #071a47;
-  --color-champagne-gold: #d6af7a;
-  --color-ivory: #f7f3eb;
-  --color-sand: #eadcc5;
-  --color-warm-grey: #c9c2b6;
+  --color-midnight-navy: #071A47;
+  --color-champagne-gold: #D6AF7A;
+  --color-ivory: #F7F3EB;
+  --color-sand: #EADCC5;
+  --color-warm-grey: #C9C2B6;
 
   /* Brand typography */
   --font-heading: var(--font-cinzel);
   --font-sans: var(--font-montserrat);
+  --font-cinzel: var(--font-cinzel);
+  --font-montserrat: var(--font-montserrat);
 }
 
 /* Animations — Tailwind v4 requires @keyframes nested inside @theme. */
@@ -63,9 +65,7 @@
   }
 }
 
-html {
-  scroll-behavior: smooth;
-}
+
 
 body {
   background: var(--background);
@@ -81,4 +81,63 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading), serif;
+}
+
+/* Lenis Base Styles */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Accordion fix */
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Global Form Inputs Standardization */
+input[type="text"],
+input[type="email"],
+input[type="search"],
+input[type="tel"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  border: 1px solid rgba(7, 26, 71, 0.3);
+  background-color: transparent;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  color: #071A47;
+  transition: all 150ms ease-in-out;
+}
+
+/* Highly visible placeholder text */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(7, 26, 71, 0.6) !important;
+}
+
+/* Focus styles */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #071A47 !important;
+  box-shadow: 0 0 0 1px #071A47 !important;
 }
