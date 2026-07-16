@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/commerce/config";
 
 export interface PolicySection {
   heading: string;
@@ -70,10 +71,10 @@ export default function PolicyPage({
         <p className="mt-16 border-t border-champagne-gold/25 pt-8 text-sm leading-7 text-midnight-navy/60">
           Questions about this policy? Reach our team at{" "}
           <a
-            href="mailto:care@ojara.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-champagne-gold underline-offset-4 hover:underline"
           >
-            care@ojara.com
+            {SUPPORT_EMAIL}
           </a>
           .
         </p>

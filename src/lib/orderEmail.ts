@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { isValidEmail } from "./validateEmail";
+import { brandMarkHtml, logoAttachments } from "./emailBrand";
 import { SITE_URL, SUPPORT_EMAIL, BRAND_NAME } from "./commerce/config";
 
 // Branded, invoice-style confirmation sent from our own Gmail, so the customer
@@ -17,7 +18,7 @@ const IVORY = "#f7f3eb";
 const INK = "#1a2338";
 const MUTED = "#6b7280";
 
-const LOGO_URL = `${SITE_URL}/email-logo.png`; // optional; falls back to wordmark
+
 
 type OrderEmailItem = {
   name: string;
@@ -177,13 +178,13 @@ export const renderOrderEmail = (
 
   const subject = `Your ${BRAND_NAME} order ${params.orderNumber} is confirmed`;
 
-  const wordmark = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;letter-spacing:8px;color:${NAVY};font-weight:bold;">✦ ${BRAND_NAME}</div>`;
+  const brandMark = brandMarkHtml();
 
   const html = `
   <div style="background:${IVORY};padding:24px 0;font-family:Arial,Helvetica,sans-serif;">
     <div style="max-width:620px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #eadfca;color:${INK};">
       <div style="padding:28px 24px 8px;text-align:center;">
-        ${wordmark}
+        ${brandMark}
       </div>
       <div style="padding:8px 32px 32px;">
         <h1 style="margin:18px 0 4px;font-size:24px;color:${NAVY};">Thanks for your order, ${escapeHtml(
@@ -304,9 +305,6 @@ export const renderOrderEmail = (
   return { subject, html, text: textLines.join("\n") };
 };
 
-// Referenced above; kept so a real /email-logo.png can be swapped in later without
-// touching the renderer. (Unused today — the wordmark is used instead.)
-void LOGO_URL;
 
 /**
  * Sends the confirmation. NEVER throws — a failure here must not fail the order
@@ -342,6 +340,9 @@ export const sendOrderConfirmationEmail = async (
       subject,
       text,
       html,
+      // Inline logo. `cid` must match the src="cid:…" in the rendered html, and
+      // contentDisposition:"inline" stops clients listing it as a download.
+      attachments: logoAttachments(),
     });
     return true;
   } catch (err) {

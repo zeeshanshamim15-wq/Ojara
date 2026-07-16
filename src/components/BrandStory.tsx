@@ -35,12 +35,10 @@ export default function BrandStory() {
               within, the source of vitality, protection, and calm.
             </p>
             <p>
-              Every OJARA piece is chosen and charged to work with that energy.
-              From raw crystals to sacred talismans, each object becomes a tool
-              to attract abundance, shield your aura, and magnify your intent.
+              Every OJARA magnetic bracelet combines the metaphysical healing frequency of natural crystals with modern bio-magnetic therapy. Therapeutic magnets stimulate blood circulation and balance the body&rsquo;s magnetic field, creating a synergistic effect that amplifies the stone&rsquo;s positive energy.
             </p>
             <p>
-              Not decoration for its own sake — but energy, made intentional.
+              Designed for everyday wear, these bracelets serve as active anchors for your intentions — shielding your aura, balancing your energy, and steadying your spirit.
             </p>
           </div>
 

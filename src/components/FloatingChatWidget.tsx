@@ -58,7 +58,12 @@ export default function FloatingChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[85] flex flex-col items-end print:hidden">
+    // Mobile stacks three fixed bars along the bottom edge: MobileBottomNav
+    // (bottom-0, 64px) + its promo strip (+32px) + StickyAddToBag (bottom-96px).
+    // At bottom-6 this bubble sat on top of all of them — and since it carries the
+    // highest z-index (85 vs the bar's 40), it covered the Buy Now button outright.
+    // Clear the whole stack on mobile; desktop keeps the original corner inset.
+    <div className="fixed bottom-[calc(168px+env(safe-area-inset-bottom))] right-4 z-[85] flex flex-col items-end print:hidden md:bottom-6 md:right-6">
       {/* Slide-up chat window */}
       <div
         role="dialog"

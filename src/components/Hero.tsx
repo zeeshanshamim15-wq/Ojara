@@ -24,7 +24,7 @@ export default function Hero() {
 
       <div className="relative z-10 mx-auto flex max-w-5xl animate-fade-in-up flex-col items-center px-6 py-24 text-center sm:py-32">
         <span className="mb-6 text-[0.7rem] uppercase tracking-[0.4em] text-champagne-gold/80 sm:mb-8 sm:text-xs sm:tracking-[0.5em]">
-          Manifestation &amp; Energy
+          Magnetic Healing &amp; Crystals
         </span>
 
         <h1 className="max-w-4xl text-4xl font-normal uppercase leading-[1.15] tracking-widest text-champagne-gold drop-shadow-[0_4px_10px_rgba(230,205,152,0.15)] sm:text-6xl md:text-7xl">
@@ -32,9 +32,7 @@ export default function Hero() {
         </h1>
 
         <p className="mt-6 max-w-xl text-sm leading-7 tracking-wide text-ivory/85 sm:mt-8 sm:text-base sm:leading-8 md:text-lg">
-          Sacred stones and spiritual objects, charged to shift your energy —
-          attract abundance, protect your aura, and invite good fortune into
-          every day.
+          Authentic crystal energy meets bio-magnetic therapy. Premium magnetic bracelets designed to enhance circulation, balance your vital Ojas energy, and shield your aura.
         </p>
 
         <div className="mt-10 flex flex-col items-center gap-4 sm:mt-12 sm:flex-row sm:gap-5">

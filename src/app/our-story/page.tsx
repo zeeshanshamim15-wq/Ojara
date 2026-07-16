@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 // Reuse image IDs already verified to resolve (HTTP 200) in the product catalogue.
 const img = (id: string, w = 1400) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
+  id.startsWith("/") ? id : `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
 
 interface StoryBlock {
   eyebrow: string;

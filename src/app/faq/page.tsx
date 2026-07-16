@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SUPPORT_EMAIL } from "@/lib/commerce/config";
 import FaqAccordion, { type FaqItem } from "@/components/FaqAccordion";
 
 export const metadata: Metadata = {
@@ -77,10 +78,10 @@ export default function FaqPage() {
         <p className="mt-16 border-t border-champagne-gold/30 pt-8 text-center text-sm leading-7 text-midnight-navy/70">
           Still curious? Write to us at{" "}
           <a
-            href="mailto:care@ojara.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-champagne-gold font-medium underline-offset-4 hover:underline"
           >
-            care@ojara.com
+            {SUPPORT_EMAIL}
           </a>
           .
         </p>

@@ -3,6 +3,18 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { useEffect, useState } from "react";
 import type { Product } from "@/lib/mockData";
 
+// Minimal shape we use off the Wix client for cart sync.
+type WixCartLineItem = {
+  catalogReference: { appId: string; catalogItemId: string | undefined };
+  quantity: number;
+};
+type WixCartClient = {
+  currentCart: {
+    deleteCurrentCart: () => Promise<unknown>;
+    addToCurrentCart: (arg: { lineItems: WixCartLineItem[] }) => Promise<unknown>;
+  };
+};
+
 export interface CartItem {
   product: Product;
   quantity: number;
@@ -16,6 +28,12 @@ interface CartState {
   isCartOpen: boolean;
   // The checkout modal (opened from the cart's "ORDER NOW"). Never persisted.
   isCheckoutOpen: boolean;
+  // The account drawer. Lives here so it can be mounted ONCE (in layout) and
+  // opened from both the desktop header and the mobile bottom nav. Previously
+  // each rendered its own <AuthDrawer>, so on desktop two were in the DOM at once
+  // — duplicate ids (#ojara-email/#ojara-password) and two aria-modal dialogs,
+  // which broke label->input focus and made the form look untypeable.
+  isAuthOpen: boolean;
   // Product IDs, most-recent first. Powers the "Recently Viewed" rails.
   recentlyViewed: string[];
   addItem: (product: Product) => void;
@@ -26,7 +44,44 @@ interface CartState {
   closeCart: () => void;
   openCheckout: () => void;
   closeCheckout: () => void;
+  openAuth: () => void;
+  closeAuth: () => void;
   addRecentlyViewed: (productId: string) => void;
+}
+
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+async function syncWixCart(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  
+  if (syncTimeout) clearTimeout(syncTimeout);
+  
+  syncTimeout = setTimeout(async () => {
+    try {
+      const { wixClient } = await import("@/context/wixContext");
+      // The SDK's module types don't surface currentCart on the client instance.
+      const wc = wixClient as unknown as WixCartClient;
+      
+      // Delete current Wix cart
+      await wc.currentCart.deleteCurrentCart().catch(() => {});
+      
+      const lineItems = items
+        .filter((item) => item.product.wixCatalogItemId)
+        .map((item) => ({
+          catalogReference: {
+            appId: "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            catalogItemId: item.product.wixCatalogItemId,
+          },
+          quantity: item.quantity,
+        }));
+        
+      if (lineItems.length > 0) {
+        await wc.currentCart.addToCurrentCart({ lineItems });
+      }
+    } catch (e) {
+      console.error("Failed to sync cart to Wix server:", e);
+    }
+  }, 300);
 }
 
 export const useCartStore = create<CartState>()(
@@ -35,6 +90,7 @@ export const useCartStore = create<CartState>()(
       cartItems: [],
       isCartOpen: false,
       isCheckoutOpen: false,
+      isAuthOpen: false,
       recentlyViewed: [],
 
       addItem: (product) =>
@@ -43,38 +99,45 @@ export const useCartStore = create<CartState>()(
             (item) => item.product.id === product.id,
           );
 
+          let nextItems;
           if (existing) {
-            return {
-              cartItems: state.cartItems.map((item) =>
-                item.product.id === product.id
-                  ? { ...item, quantity: item.quantity + 1 }
-                  : item,
-              ),
-            };
+            nextItems = state.cartItems.map((item) =>
+              item.product.id === product.id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item,
+            );
+          } else {
+            nextItems = [...state.cartItems, { product, quantity: 1 }];
           }
 
-          return {
-            cartItems: [...state.cartItems, { product, quantity: 1 }],
-          };
+          syncWixCart(nextItems);
+          return { cartItems: nextItems };
         }),
 
       removeItem: (productId) =>
-        set((state) => ({
-          cartItems: state.cartItems.filter(
+        set((state) => {
+          const nextItems = state.cartItems.filter(
             (item) => item.product.id !== productId,
-          ),
-        })),
+          );
+          syncWixCart(nextItems);
+          return { cartItems: nextItems };
+        }),
 
       updateQuantity: (productId, quantity) =>
-        set((state) => ({
-          cartItems: state.cartItems.map((item) =>
+        set((state) => {
+          const nextItems = state.cartItems.map((item) =>
             item.product.id === productId
               ? { ...item, quantity: Math.max(1, quantity) }
               : item,
-          ),
-        })),
+          );
+          syncWixCart(nextItems);
+          return { cartItems: nextItems };
+        }),
 
-      clearCart: () => set({ cartItems: [] }),
+      clearCart: () => {
+        syncWixCart([]);
+        set({ cartItems: [] });
+      },
 
       openCart: () => set({ isCartOpen: true }),
       closeCart: () => set({ isCartOpen: false }),
@@ -82,6 +145,9 @@ export const useCartStore = create<CartState>()(
       // Opening checkout closes the cart drawer so they don't stack.
       openCheckout: () => set({ isCheckoutOpen: true, isCartOpen: false }),
       closeCheckout: () => set({ isCheckoutOpen: false }),
+      // Close the cart alongside: the account drawer occupies the same slot.
+      openAuth: () => set({ isAuthOpen: true, isCartOpen: false }),
+      closeAuth: () => set({ isAuthOpen: false }),
 
       addRecentlyViewed: (productId) =>
         set((state) => ({

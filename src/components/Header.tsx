@@ -9,12 +9,10 @@ import {
   useCartHydrated,
 } from "@/lib/store/useCartStore";
 import dynamic from "next/dynamic";
-import CurrencySelect from "@/components/CurrencySelect";
 import ShopMenu from "@/components/ShopMenu";
 import MobileNav from "@/components/MobileNav";
 
 const SearchOverlay = dynamic(() => import("@/components/SearchOverlay"), { ssr: false });
-const AuthDrawer = dynamic(() => import("@/components/AuthDrawer"), { ssr: false });
 
 const iconProps = {
   xmlns: "http://www.w3.org/2000/svg",
@@ -32,11 +30,11 @@ const iconProps = {
 export default function Header() {
   const totalQuantity = useCartStore(selectTotalQuantity);
   const openCart = useCartStore((state) => state.openCart);
+  const openAuth = useCartStore((state) => state.openAuth);
   const hydrated = useCartHydrated();
   const count = hydrated ? totalQuantity : 0;
 
   const [searchOpen, setSearchOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
 
   return (
     <>
@@ -93,9 +91,6 @@ export default function Header() {
 
           {/* Col 3: Desktop Controls / Mobile Search Only */}
           <div className="flex items-center justify-end gap-1 sm:gap-2">
-            {/* Currency Select (Desktop Only) */}
-            <CurrencySelect className="mr-1 hidden md:inline-flex" />
-
             {/* Search (Desktop & Mobile) */}
             <button
               type="button"
@@ -114,7 +109,7 @@ export default function Header() {
               <button
                 type="button"
                 aria-label="Account"
-                onClick={() => setAccountOpen(true)}
+                onClick={openAuth}
                 className="cursor-pointer rounded-full p-2 text-champagne-gold transition-all duration-150 hover:text-ivory active:scale-95"
               >
                 <svg {...iconProps}>
@@ -149,7 +144,6 @@ export default function Header() {
       </header>
 
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <AuthDrawer open={accountOpen} onClose={() => setAccountOpen(false)} />
     </>
   );
 }

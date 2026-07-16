@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { WIX_ADMIN_ENABLED } from "@/lib/commerce/config";
 import {
   sendOrderConfirmationEmail,
@@ -218,9 +218,15 @@ export async function POST(req: Request) {
     });
 
     // 2. Auto-select a shipping option — Wix REFUSES createOrder without one.
+    // Skip when step 1 already came back with one selected: each updateCheckout is
+    // a ~1s round-trip, and this is the only one of the four order calls that is
+    // ever avoidable. Cannot be merged into step 1 — the options to choose from
+    // only exist in step 1's response.
     const shippingOptions =
       updatedCheckout?.shippingInfo?.carrierServiceOptions || [];
-    if (shippingOptions.length > 0) {
+    const alreadySelected =
+      updatedCheckout?.shippingInfo?.selectedCarrierServiceOption;
+    if (!alreadySelected && shippingOptions.length > 0) {
       updatedCheckout = await wixClient.checkout.updateCheckout(checkoutId, {
         shippingInfo: {
           ...updatedCheckout.shippingInfo,
@@ -410,7 +416,12 @@ export async function POST(req: Request) {
         year: "numeric",
       });
 
-      await sendOrderConfirmationEmail({
+      // Send AFTER the response. The order is already created and approved in Wix
+      // by this point, so the shopper should not sit on a spinner waiting for a
+      // Gmail SMTP handshake — that was several seconds of dead time before the
+      // confirmation page appeared. `after` (not a floating promise) keeps the
+      // work alive past the response even on serverless, so the mail still sends.
+      const emailParams: OrderEmailParams = {
         to: email,
         customerName: fullName,
         orderNumber,
@@ -422,6 +433,15 @@ export async function POST(req: Request) {
         summary,
         address: { line1: addressLine1, city, state, postalCode },
         phone,
+      };
+      after(async () => {
+        try {
+          await sendOrderConfirmationEmail(emailParams);
+        } catch (e) {
+          // Never surface this to the buyer: the order is already placed, and a
+          // failed email must not read as a failed purchase.
+          console.error("Order confirmation email failed (order is safe):", e);
+        }
       });
     } catch (emailErr) {
       console.error("Order confirmation email step failed:", emailErr);

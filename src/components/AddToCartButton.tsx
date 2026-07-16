@@ -9,12 +9,16 @@ export default function AddToCartButton({
   className,
   children = "Add to Bag",
   onAdded,
+  ariaLabel,
 }: {
   product: Product;
   className?: string;
   children?: React.ReactNode;
   // Optional hook fired after the item is added (e.g. to close a modal).
   onAdded?: () => void;
+  // Required when `children` is icon-only (the product grid): without it the
+  // button has no accessible name and reads as an empty control.
+  ariaLabel?: string;
 }) {
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
@@ -39,6 +43,8 @@ export default function AddToCartButton({
       type="button"
       disabled={isOutOfStock}
       onClick={handleClick}
+      aria-label={ariaLabel}
+      title={ariaLabel}
       className={
         isOutOfStock
           ? "w-full sm:w-auto rounded-full bg-gray-200 text-gray-400 border border-gray-300 px-3 py-1.5 sm:px-5 sm:py-2 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] cursor-not-allowed text-center"

@@ -1,5 +1,38 @@
 <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="14" fill="#071A47"/>
-  <circle cx="32" cy="34" r="15" fill="none" stroke="#D6AF7A" stroke-width="4.5"/>
-  <circle cx="32" cy="15" r="4.5" fill="#D6AF7A"/>
+  <!--
+    OJARA favicon — the faceted gem ring from the brand mark.
+
+    The full logo (public/logo.png) is thin gold linework on transparency; at 16px
+    the facets disappear and it reads as a smudge. So this keeps the silhouette
+    (a 16-sided gem ring + the sparkle above it) at a weight that survives a
+    browser tab, rather than shrinking the raster art.
+
+    Theme-aware: a tab strip is dark in dark mode and light in light mode, so the
+    plate flips to stay legible against either. Chrome/Firefox honour
+    prefers-color-scheme in SVG favicons; Safari ignores it and gets the light
+    (navy plate / gold mark) default, which is the brand's primary pairing anyway.
+  -->
+  <style>
+    .plate { fill: #071A47; }
+    .mark  { stroke: #D6AF7A; }
+    .spark { fill: #D6AF7A; }
+    @media (prefers-color-scheme: dark) {
+      .plate { fill: #F7F3EB; }
+      .mark  { stroke: #071A47; }
+      .spark { fill: #071A47; }
+    }
+  </style>
+
+  <rect class="plate" width="64" height="64" rx="14"/>
+
+  <!-- 16-gon ring: the gem's faceted outline, thickened to read at small sizes. -->
+  <polygon
+    class="mark"
+    fill="none"
+    stroke-width="4"
+    stroke-linejoin="round"
+    points="32,14 38.5,15.3 44.1,19 47.8,24.5 49.1,31 47.8,37.5 44.1,43 38.5,46.7 32,48 25.5,46.7 19.9,43 16.2,37.5 14.9,31 16.2,24.5 19.9,19 25.5,15.3"/>
+
+  <!-- The sparkle that leads the wordmark (the "✦ OJARA" lockup). -->
+  <circle class="spark" cx="32" cy="7" r="3.6"/>
 </svg>

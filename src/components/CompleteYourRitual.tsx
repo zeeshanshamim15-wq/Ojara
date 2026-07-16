@@ -1,17 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-import { products } from "@/lib/mockData";
+import { getAllProducts } from "@/lib/catalog";
 import { formatPrice } from "@/lib/format";
 
 /**
  * Cross-sell rail shown at the foot of a product page. Surfaces three other
  * pieces to keep the shopper browsing after they've considered the main item.
  */
-export default function CompleteYourRitual({
+export default async function CompleteYourRitual({
   currentId,
 }: {
   currentId: string;
 }) {
+  const products = await getAllProducts();
   const suggestions = products
     .filter((product) => product.id !== currentId)
     .slice(0, 3);
@@ -34,7 +35,7 @@ export default function CompleteYourRitual({
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-champagne-gold/20 active:scale-95"
+              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:shadow-champagne-gold/20 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image

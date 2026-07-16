@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { categories } from "@/lib/mockData";
+import { getCategories } from "@/lib/catalog";
 
 // Viora-style category strip — horizontal scrollable row with rounded images
 // and labels. Shows all 9 categories (4 intentions + 5 types) so the shopper
@@ -8,7 +8,9 @@ import { categories } from "@/lib/mockData";
 const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=300&q=80`;
 
-export default function CategoryStrip() {
+export default async function CategoryStrip() {
+  const categories = await getCategories();
+
   return (
     <section className="border-b border-champagne-gold/20 bg-ivory px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl">
@@ -44,7 +46,15 @@ export default function CategoryStrip() {
               <div className="relative h-20 w-20 overflow-hidden rounded-2xl bg-sand ring-2 ring-transparent transition-all duration-300 group-hover:ring-champagne-gold group-hover:shadow-lg group-hover:shadow-champagne-gold/15 sm:h-24 sm:w-24">
                 {cat.image ? (
                   <Image
-                    src={img(cat.image)}
+                    // cat.image may be a bare Unsplash photo id, a local path, or
+                    // an absolute url (Wix CDN / an Unsplash fallback). Only the
+                    // bare id needs img() — wrapping an absolute url produced
+                    // https://images.unsplash.com/https://... and broke every tile.
+                    src={
+                      cat.image.startsWith("http") || cat.image.startsWith("/")
+                        ? cat.image
+                        : img(cat.image)
+                    }
                     alt={cat.label}
                     fill
                     sizes="96px"

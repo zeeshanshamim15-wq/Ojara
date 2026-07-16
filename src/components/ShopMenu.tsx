@@ -2,10 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { categories } from "@/lib/mockData";
-
-const byIntention = categories.filter((c) => c.group === "intention");
-const byType = categories.filter((c) => c.group === "type");
+import type { Category } from "@/lib/catalog";
 
 // Hover to open on pointer devices, click/Enter on touch and keyboard. Closing
 // is deliberately forgiving: a short delay on mouseleave so a diagonal path from
@@ -14,6 +11,7 @@ const CLOSE_DELAY_MS = 120;
 
 export default function ShopMenu() {
   const [open, setOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -29,7 +27,22 @@ export default function ShopMenu() {
     closeTimer.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
   };
 
-  useEffect(() => cancelClose, []);
+  useEffect(() => {
+    cancelClose();
+    // Load categories dynamically from the API route
+    async function load() {
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const list = await res.json();
+          setCategories(list);
+        }
+      } catch (e) {
+        console.error("Failed to load categories in ShopMenu:", e);
+      }
+    }
+    load();
+  }, []);
 
   // Escape closes and returns focus to the page; clicking away closes too.
   useEffect(() => {
@@ -93,25 +106,25 @@ export default function ShopMenu() {
 
       {/* Panel. Anchored to the trigger on desktop; full-width sheet on mobile. */}
       <div
-        className={`absolute left-1/2 top-full z-[100] w-[500px] -translate-x-1/2 pt-4 transition-all duration-300 ease-out ${
+        className={`absolute left-1/2 top-full z-[100] w-[320px] -translate-x-1/2 pt-4 transition-all duration-300 ease-out ${
           open
             ? "visible translate-y-0 opacity-100"
             : "invisible -translate-y-1 opacity-0"
         }`}
       >
-        <div className="grid grid-cols-1 gap-8 rounded-2xl border border-champagne-gold/30 bg-midnight-navy/98 p-8 shadow-2xl shadow-black/40 backdrop-blur-sm sm:grid-cols-2">
+        <div className="rounded-2xl border border-champagne-gold/30 bg-midnight-navy/98 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">
           <div>
             <p className="mb-4 text-[0.65rem] uppercase tracking-[0.35em] text-champagne-gold/90">
-              Shop by Intention
+              Shop by Collection
             </p>
             <ul className="space-y-1">
-              {byIntention.map((category) => (
+              {categories.map((category) => (
                 <li key={category.slug}>
                   <Link
                     href={`/category/${category.slug}`}
                     prefetch
                     onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-2.5 text-sm tracking-wide text-ivory transition-colors duration-300 ease-out hover:bg-champagne-gold/10 hover:text-champagne-gold"
+                    className="block rounded-lg px-3 py-2 text-sm tracking-wide text-ivory transition-colors duration-300 ease-out hover:bg-champagne-gold/10 hover:text-champagne-gold"
                   >
                     ✦ {category.label}
                   </Link>
@@ -120,27 +133,7 @@ export default function ShopMenu() {
             </ul>
           </div>
 
-          <div>
-            <p className="mb-4 text-[0.65rem] uppercase tracking-[0.35em] text-champagne-gold/90">
-              Shop by Type
-            </p>
-            <ul className="space-y-1">
-              {byType.map((category) => (
-                <li key={category.slug}>
-                  <Link
-                    href={`/category/${category.slug}`}
-                    prefetch
-                    onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-2.5 text-sm tracking-wide text-ivory transition-colors duration-300 ease-out hover:bg-champagne-gold/10 hover:text-champagne-gold"
-                  >
-                    {category.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="border-t border-champagne-gold/30 pt-5 sm:col-span-2">
+          <div className="mt-5 border-t border-champagne-gold/30 pt-4">
             <Link
               href="/#collection"
               prefetch

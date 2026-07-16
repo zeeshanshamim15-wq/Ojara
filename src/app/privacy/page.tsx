@@ -44,7 +44,7 @@ export default function PrivacyPage() {
         {
           heading: "Your Rights",
           body: [
-            "Depending on where you live, you may have the right to access, correct, or delete the personal information we hold about you, and to object to or restrict certain processing. To exercise these rights, contact us at care@ojara.com.",
+            "Depending on where you live, you may have the right to access, correct, or delete the personal information we hold about you, and to object to or restrict certain processing. To exercise these rights, contact us at ojara.jewel@gmail.com.",
           ],
         },
         {

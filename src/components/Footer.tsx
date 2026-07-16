@@ -6,6 +6,28 @@ interface FooterColumn {
   links: { label: string; href: string }[];
 }
 
+// TODO(owner): swap the Facebook href once the real page url arrives — it is a
+// placeholder today and deliberately does NOT link out.
+const socials: { label: string; href: string | null; icon: string }[] = [
+  {
+    label: "OJARA on Instagram",
+    href: "https://www.instagram.com/ojara.india",
+    icon: "/instagram.png",
+  },
+  { label: "OJARA on Facebook", href: null, icon: "/facebook.png" },
+];
+
+// Payment methods we actually accept: Razorpay covers cards/UPI/RuPay, plus COD.
+// (public/paypal.png exists but PayPal is not offered — showing it would promise
+// a checkout option that doesn't exist.)
+const payments: { label: string; src: string }[] = [
+  { label: "Visa", src: "/visa.png" },
+  { label: "Mastercard", src: "/mastercard.png" },
+  { label: "UPI", src: "/upi.png" },
+  { label: "RuPay", src: "/rupay.png" },
+  { label: "Cash on Delivery", src: "/cash-on-delivery.png" },
+];
+
 const columns: FooterColumn[] = [
   {
     title: "The Brand",
@@ -20,7 +42,7 @@ const columns: FooterColumn[] = [
     links: [
       { label: "Shipping & Returns", href: "/shipping-returns" },
       { label: "FAQ", href: "/faq" },
-      { label: "Contact", href: "mailto:care@ojara.com" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
@@ -52,9 +74,37 @@ export default function Footer() {
               </p>
             </div>
             <p className="mt-4 text-sm leading-6 text-champagne-gold/90">
-              Sacred crystals and spiritual objects, charged to shift your
-              energy every day.
+              Magnetic crystal bracelets, charged to shift your energy every day.
             </p>
+
+            {/* Social */}
+            <div className="mt-6 flex items-center gap-3">
+              {socials.map((s) =>
+                s.href ? (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-champagne-gold/40 transition-all duration-150 hover:border-champagne-gold hover:bg-champagne-gold/10 active:scale-95"
+                  >
+                    <Image src={s.icon} alt="" width={18} height={18} className="object-contain" />
+                  </a>
+                ) : (
+                  // No url yet — render it inert rather than linking to "#",
+                  // which would look live and go nowhere.
+                  <span
+                    key={s.label}
+                    aria-label={`${s.label} (coming soon)`}
+                    title="Coming soon"
+                    className="flex h-9 w-9 cursor-default items-center justify-center rounded-full border border-champagne-gold/20 opacity-40"
+                  >
+                    <Image src={s.icon} alt="" width={18} height={18} className="object-contain" />
+                  </span>
+                ),
+              )}
+            </div>
           </div>
 
           {columns.map((column) => (
@@ -79,8 +129,24 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-14 border-t border-champagne-gold/30 pt-6 text-xs tracking-[0.15em] text-champagne-gold/85">
-          © {new Date().getFullYear()} Ojara. All rights reserved.
+        <div className="mt-14 flex flex-col-reverse items-center gap-6 border-t border-champagne-gold/30 pt-6 sm:flex-row sm:justify-between">
+          <p className="text-xs tracking-[0.15em] text-champagne-gold/85">
+            © {new Date().getFullYear()} Ojara. All rights reserved.
+          </p>
+
+          {/* Payment badges */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {payments.map((p) => (
+              <Image
+                key={p.label}
+                src={p.src}
+                alt={p.label}
+                width={44}
+                height={26}
+                className="h-6 w-auto object-contain opacity-90 transition-opacity hover:opacity-100"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </footer>

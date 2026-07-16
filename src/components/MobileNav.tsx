@@ -2,15 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { categories } from "@/lib/mockData";
-
-const byIntention = categories.filter((c) => c.group === "intention");
-const byType = categories.filter((c) => c.group === "type");
+import type { Category } from "@/lib/catalog";
 
 // The mega menu's counterpart below the md breakpoint. A hover popover doesn't
 // translate to touch, so the same categories are served as a full-width sheet.
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    // Load categories dynamically
+    async function load() {
+      try {
+        const res = await fetch("/api/categories");
+        if (res.ok) {
+          const list = await res.json();
+          setCategories(list);
+        }
+      } catch (e) {
+        console.error("Failed to load categories in MobileNav:", e);
+      }
+    }
+    load();
+  }, []);
 
   // Lock body scroll while the sheet is open; close on Escape.
   useEffect(() => {
@@ -68,10 +82,10 @@ export default function MobileNav() {
           <div className="space-y-8 px-6 py-8">
             <div>
               <p className="mb-3 text-[0.65rem] uppercase tracking-[0.35em] text-champagne-gold/90">
-                Shop by Intention
+                Shop by Collection
               </p>
               <ul className="space-y-1">
-                {byIntention.map((category) => (
+                {categories.map((category) => (
                   <li key={category.slug}>
                     <Link
                       href={`/category/${category.slug}`}
@@ -80,26 +94,6 @@ export default function MobileNav() {
                       className="block py-2.5 text-sm tracking-wide text-ivory transition-colors duration-300 ease-out hover:text-champagne-gold"
                     >
                       ✦ {category.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <p className="mb-3 text-[0.65rem] uppercase tracking-[0.35em] text-champagne-gold/90">
-                Shop by Type
-              </p>
-              <ul className="space-y-1">
-                {byType.map((category) => (
-                  <li key={category.slug}>
-                    <Link
-                      href={`/category/${category.slug}`}
-                      prefetch
-                      onClick={() => setOpen(false)}
-                      className="block py-2.5 text-sm tracking-wide text-ivory transition-colors duration-300 ease-out hover:text-champagne-gold"
-                    >
-                      {category.label}
                     </Link>
                   </li>
                 ))}

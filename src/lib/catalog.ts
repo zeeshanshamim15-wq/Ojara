@@ -1,35 +1,311 @@
-// ============================================================================
-// Catalog access seam — the ONE place the backend catalog swaps in.
-//
-// Today it re-exports the local `mockData` catalog. When Wix is live (Phase 2),
-// swap the bodies of these functions to query Wix Stores (collections/products)
-// and map the results to the `Product` / `Category` shapes — nothing else in the
-// app needs to change if data flows through here.
-//
-// NOTE: the 22 existing components still import from `@/lib/mockData` directly.
-// Migrating them to import from here is a mechanical Phase-2 step (done when we
-// actually switch to Wix, since those files change then anyway). Kept as a
-// deliberate no-op-for-now seam so mock mode stays byte-for-byte the working
-// storefront. See the plan file + OJARA-HANDOVER §6.
-// ============================================================================
-
+import { WIX_ENABLED } from "./commerce/config";
 import {
-  products,
-  categories,
+  products as mockProducts,
+  categories as mockCategories,
   getProductById as _getProductById,
-  getCategoryBySlug as _getCategoryBySlug,
-  getProductsByCategory as _getProductsByCategory,
   type Product,
   type Category,
+  type IntentionSlug,
 } from "@/lib/mockData";
 
 export type { Product, Category };
 
-export const getAllProducts = (): Product[] => products;
-export const getCategories = (): Category[] => categories;
-export const getProductById = (id: string): Product | undefined =>
-  _getProductById(id);
-export const getCategoryBySlug = (slug: string): Category | undefined =>
-  _getCategoryBySlug(slug);
-export const getProductsByCategory = (category: Category): Product[] =>
-  _getProductsByCategory(category);
+// The slices of Wix's REST payloads we actually read. Wix's responses are far
+// wider than this; typing only what we touch keeps the mapping honest without
+// vendoring their whole schema.
+type WixImage = { url?: string };
+type WixMediaItem = { image?: WixImage };
+type WixRawProduct = {
+  id: string;
+  slug?: string;
+  name?: string;
+  description?: string;
+  collectionIds?: string[];
+  collections?: { id: string }[];
+  media?: { mainMedia?: WixMediaItem; items?: WixMediaItem[] };
+  priceData?: { price?: number; discountedPrice?: number; originalPrice?: number };
+  price?: { price?: number; discountedPrice?: number; originalPrice?: number };
+  inventory?: { quantity?: number };
+};
+type WixRawCollection = {
+  id: string;
+  slug?: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  media?: { mainMedia?: WixMediaItem };
+};
+// Product plus the Wix-only field we attach during mapping.
+type ProductWithCollections = Product & { collectionIds?: string[] };
+
+// Convert a Wix product to our Product interface
+function mapWixProduct(p: WixRawProduct): Product {
+  // Find matching mock product to preserve metadata (intentions, benefits, type, etc.)
+  const slug = p.slug || "";
+  const mockP = mockProducts.find((mp) => mp.id === slug || mp.wixCatalogItemId === p.id);
+
+  // Parse description: Wix description is usually HTML
+  const rawDescription = p.description || "";
+  const cleanDescription = rawDescription.replace(/<[^>]*>/g, "").trim();
+
+  // Wix returns image urls either absolute or as a bare media id — normalise both.
+  const toUrl = (u: string) =>
+    u.startsWith("http") || u.startsWith("/")
+      ? u
+      : `https://static.wixstatic.com/media/${u}`;
+
+  // Resolve main image URL
+  let imageUrl = "/images/placeholder.jpg";
+  if (p.media?.mainMedia?.image?.url) {
+    imageUrl = toUrl(p.media.mainMedia.image.url);
+  } else if (p.media?.items?.[0]?.image?.url) {
+    imageUrl = toUrl(p.media.items[0].image.url);
+  } else if (mockP) {
+    imageUrl = mockP.image;
+  }
+
+  // The full gallery. Wix holds every uploaded shot in media.items (4 per product
+  // today); previously only the main image survived this mapping and the PDP
+  // padded it out with a duplicate + a stock video. Keep Wix's ordering, dedupe
+  // against the main image so it can't appear twice, and fall back to [main] so
+  // the gallery is never empty.
+  const galleryUrls: string[] = (p.media?.items ?? [])
+    .map((it) => it?.image?.url)
+    .filter((u): u is string => typeof u === "string" && u.length > 0)
+    .map(toUrl);
+  const images = galleryUrls.length
+    ? [imageUrl, ...galleryUrls.filter((u) => u !== imageUrl)]
+    : [imageUrl];
+
+  // Pricing. Wix's field names are the opposite of what they sound like:
+  //
+  //   dashboard "Price"              (₹1200, what's charged) -> priceData.discountedPrice
+  //   dashboard "Strikethrough price"(₹2000, the "was" price) -> priceData.price
+  //
+  // Reading priceData.price therefore showed the STRIKETHROUGH as the sale price:
+  // the PDP advertised ₹2,000 while the Wix cart line item was ₹1,200 (verified
+  // against a real cart), so the site over-quoted every product by the discount.
+  // discountedPrice is authoritative — it's what Wix actually bills.
+  const pd = p.priceData ?? p.price ?? {};
+  const selling = pd.discountedPrice ?? pd.price ?? (mockP ? mockP.price : 0);
+  const list = pd.price ?? undefined;
+  const price = selling;
+  // Only a real markdown gets a strikethrough — equal values would render "₹1200
+  // was ₹1200".
+  const originalPrice =
+    list != null && Number(list) > Number(selling)
+      ? list
+      : mockP
+        ? mockP.originalPrice
+        : undefined;
+
+  return {
+    id: slug || p.id,
+    name: p.name || "",
+    price: Number(price),
+    originalPrice: originalPrice ? Number(originalPrice) : undefined,
+    description: cleanDescription || (mockP ? mockP.description : ""),
+    intention: mockP ? mockP.intention : "Sacred Healing",
+    benefits: mockP ? mockP.benefits : [],
+    intentions: mockP ? mockP.intentions : [],
+    type: mockP ? mockP.type : undefined,
+    image: imageUrl,
+    images,
+    stockCount: p.inventory?.quantity ?? (mockP ? mockP.stockCount : 10),
+    isBundle: mockP ? mockP.isBundle : false,
+    wixCatalogItemId: p.id,
+    // Wix-only; carried so getProductsByCategory can filter by collection.
+    collectionIds: p.collectionIds || [],
+  };
+}
+
+// Single cached read of the whole catalog. Everything below filters this in
+// memory rather than re-querying Wix.
+//
+// PERF: this used to go through wixClientServer() (OAuth), which forced a visitor
+// TOKEN round-trip to Wix before every product query, on every server render, with
+// no Next cache — getProductById could fire three serial requests for one page and
+// navigation took 4-5s. The API key needs no token exchange, and `revalidate` lets
+// Next serve repeat renders from cache. The catalog is a handful of products, so
+// one cached fetch beats per-page queries at any size we'll realistically hit.
+const WIX_HEADERS = () => ({
+  Authorization: process.env.WIX_API_KEY!,
+  "wix-account-id": process.env.WIX_ACCOUNT_ID!,
+  "wix-site-id": process.env.WIX_SITE_ID!,
+  "Content-Type": "application/json",
+});
+
+// Cache lifetime for catalog reads. Stock/prices tolerate a few minutes of lag;
+// a real stock check happens at checkout against Wix anyway.
+const CATALOG_REVALIDATE = 300;
+
+const fetchWixProductsRaw = async (): Promise<WixRawProduct[]> => {
+  const res = await fetch("https://www.wixapis.com/stores-reader/v1/products/query", {
+    method: "POST",
+    headers: WIX_HEADERS(),
+    body: JSON.stringify({ query: { paging: { limit: 100 } } }),
+    next: { revalidate: CATALOG_REVALIDATE },
+  });
+  if (!res.ok) {
+    console.error("Wix products query failed:", res.status, await res.text());
+    return [];
+  }
+  const body = await res.json();
+  return body.products ?? [];
+};
+
+export const getAllProducts = async (): Promise<Product[]> => {
+  if (!WIX_ENABLED) {
+    return mockProducts;
+  }
+
+  try {
+    const items = await fetchWixProductsRaw();
+    if (!items.length) return mockProducts;
+    return items.map(mapWixProduct);
+  } catch (e) {
+    console.error("Wix fetch failed, falling back to mock catalog:", e);
+    return mockProducts;
+  }
+};
+
+const ALLOWED_COLLECTIONS = [
+  "all-products",
+  "protection-evil-eye",
+  "wealth-success",
+  "energy-vitality",
+  "calm-focus",
+];
+
+// Category tiles show a real product from that collection — Wix collections carry
+// no image of their own (verified: media is empty on all five), so the previous
+// build fell back to hardcoded Unsplash stock. That shipped broccoli as the
+// "Wealth & Success" tile. Pulling the collection's own product photo keeps every
+// tile on-brand and needs nothing uploaded to Wix.
+//
+// Returns collectionId -> main image url.
+const fetchCollectionImages = async (): Promise<Record<string, string>> => {
+  // Reuses the cached catalog read — no second network call.
+  const products = await fetchWixProductsRaw();
+  const byCollection: Record<string, string> = {};
+  for (const p of products) {
+    const url: string | undefined = p?.media?.mainMedia?.image?.url;
+    if (!url) continue;
+    const ids: string[] =
+      p.collectionIds ?? (p.collections ?? []).map((c: { id: string }) => c.id);
+    for (const id of ids) {
+      // First product wins — stable ordering, no arbitrary reshuffling per build.
+      if (!byCollection[id]) byCollection[id] = url;
+    }
+  }
+  return byCollection;
+};
+
+export const getCategories = async (): Promise<Category[]> => {
+  if (!WIX_ENABLED) {
+    return mockCategories.filter((c) => ALLOWED_COLLECTIONS.includes(c.slug));
+  }
+
+  try {
+    const res = await fetch("https://www.wixapis.com/stores-reader/v1/collections/query", {
+      method: "POST",
+      headers: WIX_HEADERS(),
+      body: JSON.stringify({ query: {} }),
+      next: { revalidate: CATALOG_REVALIDATE },
+    });
+
+    const body = await res.json();
+    if (!res.ok) {
+      console.error("Wix fetch collections failed:", JSON.stringify(body));
+      return mockCategories.filter((c) => ALLOWED_COLLECTIONS.includes(c.slug));
+    }
+
+    const rawItems = body.collections || [];
+    const items: WixRawCollection[] = rawItems.filter((col: WixRawCollection) =>
+      ALLOWED_COLLECTIONS.includes(col.slug ?? ""),
+    );
+
+    // Sort to match ALLOWED_COLLECTIONS order exactly
+    items.sort(
+      (a, b) =>
+        ALLOWED_COLLECTIONS.indexOf(a.slug ?? "") -
+        ALLOWED_COLLECTIONS.indexOf(b.slug ?? ""),
+    );
+
+    // Product photo per collection, used when the collection has no image of its own.
+    const collectionImages = await fetchCollectionImages();
+
+    return items.map((col): Category & { wixCollectionId: string } => {
+      // `undefined`, not `null` — Category.image is optional, and a null here was
+      // only tolerated because the caller was untyped.
+      let imageUrl =
+        col.media?.mainMedia?.image?.url ||
+        col.image ||
+        collectionImages[col.id] ||
+        undefined;
+      if (imageUrl && !imageUrl.startsWith("http") && !imageUrl.startsWith("/")) {
+        imageUrl = `https://static.wixstatic.com/media/${imageUrl}`;
+      }
+
+      return {
+        slug: col.slug || col.id,
+        label: col.name || "",
+        title: col.name || "",
+        tagline:
+          col.description ||
+          "Energized magnetic crystal bracelets curated for your intentions.",
+        group: col.slug === "all-products" ? "type" : "intention",
+        image: imageUrl,
+        wixCollectionId: col.id,
+      };
+    });
+  } catch (e) {
+    console.error("Wix fetch collections failed, falling back to mock:", e);
+    return mockCategories.filter((c) => ALLOWED_COLLECTIONS.includes(c.slug));
+  }
+};
+
+export const getCategoryBySlug = async (slug: string): Promise<Category | undefined> => {
+  const list = await getCategories();
+  return list.find((category) => category.slug === slug);
+};
+
+export const getProductById = async (id: string): Promise<Product | undefined> => {
+  if (!WIX_ENABLED) {
+    return _getProductById(id);
+  }
+
+  try {
+    // Match by slug first (how the PDP links are built), then by raw Wix id.
+    // Both resolve from the one cached catalog read — no extra round-trips.
+    const items = await fetchWixProductsRaw();
+    const hit =
+      items.find((p) => p.slug === id) ?? items.find((p) => p.id === id);
+    return hit ? mapWixProduct(hit) : _getProductById(id);
+  } catch (e) {
+    console.error(`Wix product fetch failed for ${id}, falling back:`, e);
+    return _getProductById(id);
+  }
+};
+
+export const getProductsByCategory = async (category: Category): Promise<Product[]> => {
+  const all = await getAllProducts();
+  
+  // Try filtering by wixCollectionId first
+  const wixColId = (category as Category & { wixCollectionId?: string })
+    .wixCollectionId;
+  if (wixColId) {
+    const filtered = (all as ProductWithCollections[]).filter((product) =>
+      product.collectionIds?.includes(wixColId),
+    );
+    if (filtered.length > 0) return filtered;
+  }
+
+  // Fallback to static category matching
+  if (category.group === "type") {
+    return all.filter((product) => product.type === category.slug);
+  }
+  return all.filter((product) =>
+    product.intentions.includes(category.slug as IntentionSlug),
+  );
+};

@@ -14,7 +14,7 @@ export default function ProductCard({
   sizes?: string;
 }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-champagne-gold/20">
+    <article className="group flex flex-col overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:shadow-champagne-gold/20">
       <Link
         href={`/product/${product.id}`}
         prefetch
@@ -56,10 +56,32 @@ export default function ProductCard({
               </span>
             )}
           </span>
+          {/* Icon-only: the "Add to Bag" label wrapped onto three lines inside the
+              round button and read as cheap. The cart glyph matches the header's,
+              so the affordance is already familiar. 44px keeps the tap target
+              accessible, and ariaLabel carries the name the text used to. */}
           <AddToCartButton
             product={product}
-            className="w-full rounded-full border border-midnight-navy px-3 py-1.5 text-[0.6rem] uppercase tracking-[0.15em] text-midnight-navy transition-colors hover:bg-midnight-navy hover:text-champagne-gold sm:w-auto sm:px-5 sm:py-2 sm:text-xs sm:tracking-[0.2em]"
-          />
+            ariaLabel={`Add ${product.name} to bag`}
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-midnight-navy text-midnight-navy transition-colors hover:bg-midnight-navy hover:text-champagne-gold"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="9" cy="20" r="1" />
+              <circle cx="18" cy="20" r="1" />
+              <path d="M2.5 3h2l2.2 12.2a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H6" />
+            </svg>
+          </AddToCartButton>
         </div>
       </div>
     </article>

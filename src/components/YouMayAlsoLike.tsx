@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { products } from "@/lib/mockData";
+import { getAllProducts } from "@/lib/catalog";
 import { formatPrice } from "@/lib/format";
 
 /**
@@ -8,7 +8,8 @@ import { formatPrice } from "@/lib/format";
  * current product, surfacing a different, wider spread of pieces than the
  * "Complete Your Ritual" rail higher up the page.
  */
-export default function YouMayAlsoLike({ currentId }: { currentId: string }) {
+export default async function YouMayAlsoLike({ currentId }: { currentId: string }) {
+  const products = await getAllProducts();
   const currentIndex = products.findIndex((p) => p.id === currentId);
   const start = currentIndex === -1 ? 0 : currentIndex;
 
@@ -36,9 +37,9 @@ export default function YouMayAlsoLike({ currentId }: { currentId: string }) {
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="cursor-pointer group flex flex-col transition-all duration-150 hover:-translate-y-1 active:scale-95"
+              className="cursor-pointer group flex flex-col transition-all duration-150 md:hover:-translate-y-1 active:scale-95"
             >
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 ease-out group-hover:shadow-xl group-hover:shadow-champagne-gold/20">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 ease-out md:group-hover:shadow-xl md:group-hover:shadow-champagne-gold/20">
                 <Image
                   src={product.image}
                   alt={product.name}

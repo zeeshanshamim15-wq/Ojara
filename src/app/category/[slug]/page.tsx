@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  categories,
-  getCategoryBySlug,
-  getProductsByCategory,
-} from "@/lib/mockData";
+import { categories } from "@/lib/mockData";
+import { getCategoryBySlug, getProductsByCategory } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import ValueProps from "@/components/ValueProps";
 
@@ -20,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
 
   if (!category) return {};
 
@@ -36,13 +33,13 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = getCategoryBySlug(slug);
+  const category = await getCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
-  const categoryProducts = getProductsByCategory(category);
+  const categoryProducts = await getProductsByCategory(category);
   const siblings = categories.filter((c) => c.group === category.group);
 
   return (
@@ -86,7 +83,7 @@ export default async function CategoryPage({
       {/* Category header */}
       <header className="mx-auto max-w-3xl px-6 pb-12 text-center">
         <p className="text-xs uppercase tracking-[0.35em] text-champagne-gold">
-          {category.group === "intention" ? "Shop by Intention" : "Shop by Type"}
+          {category.group === "intention" ? "Shop by Intention" : "Shop by Stone"}
         </p>
         <h1 className="mt-5 text-4xl text-midnight-navy sm:text-5xl">
           {category.title}
@@ -101,7 +98,7 @@ export default async function CategoryPage({
         aria-label={
           category.group === "intention"
             ? "Other intentions"
-            : "Other product types"
+            : "Other stones"
         }
         className="mx-auto max-w-6xl px-6 pb-14"
       >

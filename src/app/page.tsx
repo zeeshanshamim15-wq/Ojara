@@ -1,5 +1,4 @@
 import Hero from "@/components/Hero";
-import PressStrip from "@/components/PressStrip";
 import BrandStory from "@/components/BrandStory";
 import ProductGrid from "@/components/ProductGrid";
 import ValueProps from "@/components/ValueProps";
@@ -14,7 +13,6 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <PressStrip />
       <ProductGrid />
       <BrandStory />
       <CategoryStrip />

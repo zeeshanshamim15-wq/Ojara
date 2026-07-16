@@ -63,8 +63,16 @@ const COPY: Record<MODE, { eyebrow: string; title: string; cta: string }> = {
   },
 };
 
+// The field must read as a field. It previously used bg-midnight-navy — the SAME
+// navy as the drawer behind it — with a 1px champagne-gold/40 border, which blends
+// to roughly rgb(90,86,91) against that navy. The input was fully functional but
+// visually invisible: no fill contrast, one dim hairline. People couldn't type in
+// it because they couldn't see it.
+//
+// Now: a lighter translucent fill lifts the box off the panel, and the border is
+// opaque enough to define an edge on its own.
 const fieldClass =
-  "w-full rounded-md border border-champagne-gold/40 bg-midnight-navy px-5 py-3 text-sm text-ivory placeholder:text-ivory/60 transition-all duration-150 ease-out focus:border-champagne-gold focus:outline-none focus:ring-2 focus:ring-champagne-gold/30";
+  "w-full rounded-md border border-champagne-gold/60 bg-ivory/10 px-5 py-3 text-sm text-ivory placeholder:text-ivory/50 transition-all duration-150 ease-out focus:border-champagne-gold focus:bg-ivory/15 focus:outline-none focus:ring-2 focus:ring-champagne-gold/40";
 
 const labelClass =
   "mb-2 block text-[0.65rem] uppercase tracking-[0.3em] text-champagne-gold/90";

@@ -8,6 +8,7 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import CheckoutModal from "@/components/CheckoutModal";
+import AuthDrawerMount from "@/components/AuthDrawerMount";
 import EnergyGuideChat from "@/components/EnergyGuideChat";
 import CookieBanner from "@/components/CookieBanner";
 import LenisProvider from "@/components/LenisProvider";
@@ -57,6 +58,8 @@ export default function RootLayout({
             <Footer />
             <CartDrawer />
             <CheckoutModal />
+            {/* Mounted once here — never per-header/nav (see AuthDrawerMount). */}
+            <AuthDrawerMount />
             <EnergyGuideChat />
             <CookieBanner />
             <MobileBottomNav />

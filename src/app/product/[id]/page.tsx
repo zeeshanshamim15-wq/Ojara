@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCategoryBySlug, getProductById, products } from "@/lib/mockData";
+import { getCategoryBySlug, getProductById } from "@/lib/catalog";
+import { products } from "@/lib/mockData";
 import { formatPrice } from "@/lib/format";
 import StickyAddToBag from "@/components/StickyAddToBag";
 import CompleteYourRitual from "@/components/CompleteYourRitual";
 import RitualAccordion from "@/components/RitualAccordion";
+import ProductReviews from "@/components/ProductReviews";
 import ProductFaq from "@/components/ProductFaq";
 import YouMayAlsoLike from "@/components/YouMayAlsoLike";
 import ProductGallery from "@/components/ProductGallery";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
-import PincodeEstimator from "@/components/PincodeEstimator";
 import ProductCtas from "@/components/ProductCtas";
 
 // The four objections an Indian shopper brings to a crystal purchase: is the
@@ -82,7 +83,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = getProductById(id);
+  const product = await getProductById(id);
 
   if (!product) return {};
 
@@ -108,14 +109,14 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = getProductById(id);
+  const product = await getProductById(id);
 
   if (!product) {
     notFound();
   }
 
   // Breadcrumb up into the category this piece was most likely found through.
-  const primaryCategory = getCategoryBySlug(product.intentions[0]);
+  const primaryCategory = await getCategoryBySlug(product.intentions[0]);
 
   return (
     <div className="bg-ivory">
@@ -181,7 +182,13 @@ export default async function ProductDetailPage({
             Mobile: full-bleed escape via left-1/2 -translate-x-1/2 w-screen.
             Desktop: pins to viewport while the right column scrolls past. */}
         <div className="w-full relative left-1/2 -translate-x-1/2 w-screen overflow-hidden lg:left-auto lg:translate-x-0 lg:w-[55%] lg:overflow-visible lg:sticky lg:top-28 lg:self-start lg:h-fit">
-          <ProductGallery images={[product.image, "https://videos.pexels.com/video-files/35853514/15204260_1080_1920_30fps.mp4", product.image]} productName={product.name} />
+          {/* Every image the product actually has (4 per product from Wix), not a
+              padded placeholder set. `images` is optional on Product, so mock-mode
+              products fall back to their single image. */}
+          <ProductGallery
+            images={product.images?.length ? product.images : [product.image]}
+            productName={product.name}
+          />
         </div>
 
         {/* RIGHT — the tall column that scrolls past the pinned image */}
@@ -241,8 +248,33 @@ export default async function ProductDetailPage({
             ))}
           </ul>
 
-          {/* Pincode Estimator */}
-          <PincodeEstimator />
+          {/* Delivery promise. Replaces the pincode estimator: it quoted a
+              per-pincode ETA we can't actually honour, so we state the real
+              dispatch window instead. */}
+          <div className="mt-6 flex items-center gap-3 rounded-xl border border-champagne-gold/25 bg-sand/40 px-4 py-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-champagne-gold"
+              aria-hidden="true"
+            >
+              <path d="M10 17h4V5H2v12h3M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1" />
+              <circle cx="7.5" cy="17.5" r="2.5" />
+              <circle cx="17.5" cy="17.5" r="2.5" />
+            </svg>
+            <p className="text-sm text-midnight-navy/80">
+              Delivery expected in{" "}
+              <span className="font-semibold text-midnight-navy">6–7 days</span>{" "}
+              &middot; Free shipping across India
+            </p>
+          </div>
 
           <ProductCtas product={product} />
 
@@ -262,6 +294,9 @@ export default async function ProductDetailPage({
 
           {/* Ritual accordions — energy, ritual, promise */}
           <RitualAccordion product={product} />
+
+          {/* Reviews — honest empty state + star/photo submission form */}
+          <ProductReviews productId={product.id} productName={product.name} />
 
           {/* Risk reversal — trust badges tuned to the Indian shopper */}
           <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-midnight-navy/70 sm:grid-cols-2">

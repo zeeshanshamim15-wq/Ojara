@@ -16,6 +16,20 @@ import { WIX_ENABLED, BRAND_NAME } from "@/lib/commerce/config";
 
 type PaymentMethod = "PREPAID" | "COD";
 
+// ---------------------------------------------------------------------------
+// PREPAID KILL SWITCH — off while we're COD-only.
+//
+// TODO(owner): flip to `true` to bring prepaid back. Nothing below was deleted:
+// the Razorpay order -> widget -> verify-signature -> discount-reconciliation
+// path is intact and still typechecks, so restoring is this one line (plus the
+// RAZORPAY_* keys in .env.local, which RAZORPAY_ENABLED already gates server-side).
+//
+// While false: the "Pay Online" option renders disabled as "Coming soon", COD is
+// the only selectable method, and the −₹50 prepaid incentive is hidden — quoting
+// a discount for a method nobody can choose would just be a broken promise.
+// ---------------------------------------------------------------------------
+const PREPAID_ENABLED = false;
+
 // ISO 3166-2 subdivision codes — Wix requires the CODE, not free text.
 const IN_STATES: { code: string; name: string }[] = [
   { code: "IN-AP", name: "Andhra Pradesh" },
@@ -198,8 +212,6 @@ export default function CheckoutModal() {
 
     let checkoutId: string | undefined;
     if (WIX_ENABLED) {
-      // Bridge the local cart into Wix so the order lands in Wix Stores. Requires
-      // each product's wixCatalogItemId (populated once products are seeded).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const wc = wixClient as any;
       const WIX_STORES_APP_ID = "215238eb-22a5-4c36-9e7b-e7c08025e04e";
@@ -213,6 +225,7 @@ export default function CheckoutModal() {
           quantity: l.quantity,
         }));
       if (lineItems.length) {
+        await wc.currentCart.deleteCurrentCart().catch(() => {});
         await wc.currentCart.addToCurrentCart({ lineItems });
       }
       const checkoutResult = await wc.currentCart.createCheckoutFromCurrentCart({
@@ -467,26 +480,43 @@ export default function CheckoutModal() {
               {/* Payment method */}
               <div className="space-y-2">
                 <span className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-midnight-navy/70">Payment method</span>
-                {(["PREPAID", "COD"] as PaymentMethod[]).map((m) => (
-                  <label
-                    key={m}
-                    className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
-                      paymentMethod === m
-                        ? "border-champagne-gold bg-champagne-gold/10"
-                        : "border-midnight-navy/20 hover:border-midnight-navy/40"
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <input type="radio" name="payment" checked={paymentMethod === m} onChange={() => setPaymentMethod(m)} className="accent-midnight-navy" />
-                      <span className="text-sm font-medium text-midnight-navy">
-                        {m === "PREPAID" ? "Pay Online (UPI / Card)" : "Cash on Delivery"}
+                {(["PREPAID", "COD"] as PaymentMethod[]).map((m) => {
+                  const disabled = m === "PREPAID" && !PREPAID_ENABLED;
+                  return (
+                    <label
+                      key={m}
+                      className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
+                        disabled
+                          ? "cursor-not-allowed border-midnight-navy/10 bg-midnight-navy/[0.03] opacity-60"
+                          : paymentMethod === m
+                            ? "cursor-pointer border-champagne-gold bg-champagne-gold/10"
+                            : "cursor-pointer border-midnight-navy/20 hover:border-midnight-navy/40"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="payment"
+                          disabled={disabled}
+                          checked={paymentMethod === m}
+                          onChange={() => !disabled && setPaymentMethod(m)}
+                          className="accent-midnight-navy"
+                        />
+                        <span className="text-sm font-medium text-midnight-navy">
+                          {m === "PREPAID" ? "Pay Online (UPI / Card)" : "Cash on Delivery"}
+                        </span>
                       </span>
-                    </span>
-                    {m === "PREPAID" && (
-                      <span className="text-xs font-bold text-green-600">Save ₹{PREPAID_DISCOUNT}</span>
-                    )}
-                  </label>
-                ))}
+                      {m === "PREPAID" &&
+                        (PREPAID_ENABLED ? (
+                          <span className="text-xs font-bold text-green-600">Save ₹{PREPAID_DISCOUNT}</span>
+                        ) : (
+                          <span className="rounded-full bg-midnight-navy/10 px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-wider text-midnight-navy/60">
+                            Coming soon
+                          </span>
+                        ))}
+                    </label>
+                  );
+                })}
               </div>
 
               {/* Coupon */}

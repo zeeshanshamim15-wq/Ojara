@@ -1,14 +1,13 @@
-// Shoppers arrive by *intention* ("I need money luck", "someone's nazar is on me")
-// or by *object* ("pyrite bracelet"). Both are modelled so /category/[slug] can
+// Shoppers arrive by *intention* ("I need money luck", "shield my aura")
+// or by *stone* ("citrine bracelet"). Both are modelled so /category/[slug] can
 // serve either entry point from the same product list.
-export type IntentionSlug = "wealth" | "protection" | "healing" | "vastu";
+export type IntentionSlug = "protection" | "wealth" | "vitality" | "focus";
 
 export type TypeSlug =
-  | "raw-clusters"
-  | "bracelets"
-  | "zibu-coins"
-  | "crystal-trees"
-  | "vastu-turtles";
+  | "tourmaline"
+  | "carnelian"
+  | "citrine"
+  | "lapis-lazuli";
 
 export type CategorySlug = IntentionSlug | TypeSlug;
 
@@ -18,30 +17,40 @@ export interface Product {
   // Whole rupees. Rendered via formatPrice() so grouping stays Indian (₹1,29,999).
   price: number;
   // When set, the pre-discount price — rendered struck-through beside `price`.
-  // Used by curated bundles to show the saving versus buying pieces separately.
   originalPrice?: number;
   description: string;
   // Headline intention, shown as the card badge and on the PDP.
   intention: string;
   // Scannable outcome promises — the reason to buy, as bullets on the PDP.
   benefits: string[];
-  // Intention categories this piece belongs to. A stone can serve more than one.
+  // Intention categories this piece belongs to.
   intentions: IntentionSlug[];
-  // Object category. Absent for pieces that aren't one of the five shop types
-  // (the tumbled focus stone, the multi-piece set) — they're found by intention.
+  // Stone type category.
   type?: TypeSlug;
   image: string;
+  // Every gallery image, in Wix's ordering (image[0] === `image`, the main one).
+  // Populated from Wix media.items in live mode; in mock mode it falls back to
+  // the single `image` so the PDP gallery always has at least one entry.
+  images?: string[];
   // Units on hand. Small-batch numbers (2–15) power authentic scarcity cues.
   stockCount: number;
   // Marks curated multi-piece sets so the UI can badge them distinctly.
   isBundle?: boolean;
-  // The Wix Stores catalog GUID, captured when the product is seeded into Wix
-  // (Phase 2). Required for addToCurrentCart / real orders; null until then.
+  // The Wix Stores catalog GUID, captured when the product is seeded into Wix.
   wixCatalogItemId?: string;
+  // Wix collection GUIDs this product belongs to. Populated only in live mode
+  // (catalog.ts), and used to resolve /category/[slug] against Wix collections.
+  // Was previously bolted on behind a @ts-ignore, which hid the fact that it
+  // wasn't on the type at all.
+  collectionIds?: string[];
 }
 
 export interface Category {
-  slug: CategorySlug;
+  // In mock mode this is a CategorySlug ("protection", "citrine", ...). In live
+  // mode it's whatever slug Wix's collection carries ("protection-evil-eye",
+  // "wealth-success", "all-products"), which is a DIFFERENT set — so this can't
+  // be narrowed to CategorySlug without lying about live data.
+  slug: CategorySlug | string;
   // Menu label — short, for the Shop dropdown.
   label: string;
   // Page heading — the fuller, search-intent-matching phrasing.
@@ -55,219 +64,152 @@ export interface Category {
 // Drives both the Shop mega menu and the /category/[slug] routes.
 export const categories: Category[] = [
   {
+    slug: "protection",
+    label: "Protection & Evil Eye",
+    title: "Protection & Evil Eye — Shield Your Aura",
+    tagline:
+      "Shield yourself from nazar dosh, envy, and negative energy with authentic protective stones combined with therapeutic bio-magnetic beads.",
+    group: "intention",
+    image: "/images/category-protection.jpg",
+  },
+  {
     slug: "wealth",
     label: "Wealth & Success",
     title: "Wealth & Success — Money Magnets",
     tagline:
-      "Pyrite, jade, and citrine — the classical money magnets, placed in your wealth corner to pull income, opportunity, and steady growth toward you.",
+      "Citrine combined with bio-magnetic fields to align your frequencies, pull opportunities, and attract financial success.",
     group: "intention",
-    image: "photo-1609216970141-d981d693484a",
+    image: "/images/category-wealth.jpg",
   },
   {
-    slug: "protection",
-    label: "Evil Eye & Protection",
-    title: "Evil Eye & Protection — Nazar Suraksha",
+    slug: "vitality",
+    label: "Energy & Vitality",
+    title: "Energy & Vitality — Power & Stamina",
     tagline:
-      "Shield your home and your aura from nazar dosh, envy, and negative energy with pieces worn for this purpose for centuries.",
+      "Ignite your inner fire, boost physical stamina, and clear fatigue with Carnelian energy and circulation-boosting magnetic therapy.",
     group: "intention",
-    image: "photo-1647638162212-51180c35deae",
+    image: "/images/category-vitality.jpg",
   },
   {
-    slug: "healing",
-    label: "Health & Healing",
-    title: "Health & Healing",
+    slug: "focus",
+    label: "Calm & Focus",
+    title: "Calm & Focus — Mind Clarity",
     tagline:
-      "Balance your seven chakras, quiet an anxious mind, and restore the vital energy your body runs on.",
+      "Soothe anxiety, quiet mental chatter, and sharpen your intellect with Lapis Lazuli and harmonizing magnetic frequency therapy.",
     group: "intention",
-    image: "photo-1599858875300-3af12792e682",
+    image: "/images/category-focus.jpg",
   },
+  // Stones
   {
-    slug: "vastu",
-    label: "Vastu & Home Harmony",
-    title: "Vastu & Home Harmony",
+    slug: "tourmaline",
+    label: "Black Tourmaline",
+    title: "Black Tourmaline Magnetic Bracelets",
     tagline:
-      "Vastu-compliant objects placed to correct the energy of a room — for a calmer, luckier, more harmonious home.",
-    group: "intention",
-    image: "photo-1781579327044-da2da04b0a87",
-  },
-  {
-    slug: "raw-clusters",
-    label: "Raw Clusters",
-    title: "Raw Crystal Clusters",
-    tagline:
-      "Uncut, unpolished, and at full natural potency — raw clusters radiate the widest field of energy of any form.",
+      "The ultimate grounding and protective shield, absorbing negative frequencies and shielding from buri nazar.",
     group: "type",
-    image: "photo-1609216970141-d981d693484a",
+    image: "/images/category-protection.jpg",
   },
   {
-    slug: "bracelets",
-    label: "Bracelets",
-    title: "Crystal & Evil Eye Bracelets",
+    slug: "carnelian",
+    label: "Carnelian",
+    title: "Carnelian Magnetic Bracelets",
     tagline:
-      "Your intention, worn on the wrist — carried with you from morning to night.",
+      "Bold energy for creative fire, courage, and vitality, amplified by healing magnetic elements.",
     group: "type",
-    image: "photo-1647638162212-51180c35deae",
+    image: "/images/category-vitality.jpg",
   },
   {
-    slug: "zibu-coins",
-    label: "Zibu Coins",
-    title: "Zibu Symbol Coins",
+    slug: "citrine",
+    label: "Citrine",
+    title: "Citrine Magnetic Bracelets",
     tagline:
-      "Angelic Zibu symbols etched into auspicious stone — carried in a purse or locker to open the flow of money.",
+      "The merchant stone of pure wealth, abundance, and joy, designed to magnetise professional growth.",
     group: "type",
-    image: "photo-1607772990885-48f6e4e4be3b",
+    image: "/images/category-wealth.jpg",
   },
   {
-    slug: "crystal-trees",
-    label: "Crystal Trees",
-    title: "Crystal Trees",
+    slug: "lapis-lazuli",
+    label: "Lapis Lazuli",
+    title: "Lapis Lazuli Magnetic Bracelets",
     tagline:
-      "Hand-wired trees strung with healing stones — a living centrepiece that radiates balance through the room.",
+      "The deep blue stone of truth, wisdom, and intellectual focus, steadying an overactive mind.",
     group: "type",
-    image: "photo-1599858875300-3af12792e682",
-  },
-  {
-    slug: "vastu-turtles",
-    label: "Vastu Turtles",
-    title: "Vastu Turtles",
-    tagline:
-      "The ancient emblem of longevity and stability, placed per Vastu to invite good fortune and grounded growth.",
-    group: "type",
-    image: "photo-1781579327044-da2da04b0a87",
+    image: "/images/category-focus.jpg",
   },
 ];
 
-// Unsplash images sized for portrait product cards. IDs verified to resolve (HTTP 200)
-// and visually matched to each spiritual/manifestation piece.
-const img = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
-
 export const products: Product[] = [
   {
-    id: "raw-pyrite-cluster",
-    name: "Raw Pyrite Money Magnet (For Wealth & Success)",
-    price: 2499,
+    id: "black-tourmaline-evil-eye",
+    name: "Black Tourmaline Evil Eye Bracelet",
+    price: 1899,
     description:
-      "A raw cluster of golden pyrite — the fabled 'fool's gold' — kept in your locker, cash box, or the north wealth corner of your home to magnetise prosperity, drive, and abundance.",
-    intention: "Attract Wealth",
-    benefits: [
-      "Attracts new income streams and business opportunity",
-      "Traditionally kept in the cash locker to multiply money",
-      "Builds confidence and drive at work",
-      "Vastu-compliant for the North (wealth) direction",
-    ],
-    intentions: ["wealth"],
-    type: "raw-clusters",
-    image: img("photo-1609216970141-d981d693484a"),
-    stockCount: 4,
-  },
-  {
-    id: "chakra-crystal-tree",
-    name: "7 Chakra Healing Crystal Tree (For Positive Energy)",
-    price: 3499,
-    description:
-      "A hand-wired tree strung with all seven chakra stones, aligning your energy centres and radiating balance and positivity through every room it graces.",
-    intention: "Balance Energy",
-    benefits: [
-      "Balances all seven chakras",
-      "Clears negative energy from the home",
-      "Invites calm, positivity, and restful sleep",
-      "Auspicious Vastu placement for the living room",
-    ],
-    intentions: ["healing", "vastu"],
-    type: "crystal-trees",
-    image: img("photo-1599858875300-3af12792e682"),
-    stockCount: 7,
-  },
-  {
-    id: "green-jade-zibu-coin",
-    name: "Green Jade Zibu Coin (For Money & Luck)",
-    price: 1299,
-    description:
-      "Carved from auspicious green jade and etched with a Zibu abundance symbol, carried in your purse or locker to open the flow of money, luck, and opportunity.",
-    intention: "Invite Abundance",
-    benefits: [
-      "Opens the flow of money and unexpected gains",
-      "Carried in the purse or cash locker for daily luck",
-      "Zibu angelic symbol for abundance",
-      "Pocket-sized — travels with you everywhere",
-    ],
-    intentions: ["wealth"],
-    type: "zibu-coins",
-    image: img("photo-1607772990885-48f6e4e4be3b"),
-    stockCount: 12,
-  },
-  {
-    id: "evil-eye-bracelet",
-    name: "Authentic Evil Eye Protection Bracelet (Nazar Dosh)",
-    price: 1499,
-    description:
-      "Hand-strung around a cobalt evil-eye bead, worn for centuries to remove nazar dosh, deflect envy, and shield your aura from unwanted, negative energy.",
+      "Authentic Black Tourmaline beads paired with high-gauss bio-magnetic elements to repel negative energy and shield your aura from nazar dosh.",
     intention: "Ward Off Negativity",
     benefits: [
       "Removes nazar dosh and buri nazar",
-      "Blocks negative energy and the envy of others",
-      "Safe for daily wear — unisex, adjustable fit",
-      "Traditionally gifted to newborns and newlyweds",
+      "Shields your aura from external negative energies",
+      "Magnetic therapy supports deep cellular detoxification",
     ],
     intentions: ["protection"],
-    type: "bracelets",
-    image: img("photo-1647638162212-51180c35deae"),
-    stockCount: 3,
+    type: "tourmaline",
+    image: "https://static.wixstatic.com/media/f059b5_59c041cbd5954992bdddcde5f2faf0ab~mv2.png",
+    stockCount: 5,
+    wixCatalogItemId: "eac41b3f-0e3f-4c7b-a5a3-a9bbf3f8bb2c",
   },
   {
-    id: "golden-vastu-turtle",
-    name: "Golden Vastu Turtle (For Good Luck & Home Harmony)",
-    price: 2199,
+    id: "citrine-bracelet",
+    name: "Citrine Bracelet",
+    price: 1999,
     description:
-      "A golden Vastu turtle — the ancient emblem of longevity and stability — placed in the North or East of your home to invite good fortune, calm, and steady, grounded growth.",
-    intention: "Bring Good Fortune",
-    benefits: [
-      "Vastu correction for the North / East direction",
-      "Invites stability, longevity, and family harmony",
-      "Attracts steady financial growth",
-      "A traditional griha pravesh (housewarming) gift",
-    ],
-    intentions: ["vastu", "wealth"],
-    type: "vastu-turtles",
-    image: img("photo-1781579327044-da2da04b0a87"),
-    stockCount: 9,
-  },
-  {
-    id: "tigers-eye-focus-stone",
-    name: "Tiger's Eye Focus Stone (For Confidence & Clarity)",
-    price: 999,
-    description:
-      "A polished tiger's eye, banded in gold and earth, held in meditation to steady an anxious mind, sharpen focus, and restore quiet courage before the moments that matter.",
-    intention: "Sharpen Focus",
-    benefits: [
-      "Calms anxiety and an overthinking mind",
-      "Sharpens focus for exams, interviews, and work",
-      "Restores confidence and courage",
-      "Shields the wearer from negative intent",
-    ],
-    intentions: ["healing", "protection"],
-    image: img("photo-1780619692657-ab3105d87f7c"),
-    stockCount: 2,
-  },
-  {
-    id: "abundance-harmony-set",
-    name: "The Abundance Harmony Set (Complete Wealth Ritual)",
-    price: 5999,
-    originalPrice: 7199,
-    description:
-      "Our signature wealth ritual, curated as one. The Raw Pyrite Money Magnet, the Green Jade Zibu Coin, and a hand-strung Citrine bracelet work in harmony to magnetise prosperity, open the flow of opportunity, and hold your intention through the day. Priced below the sum of its parts, for maximum abundance.",
+      "Vibrant Citrine stones aligned with bio-magnetic fields to activate your solar plexus chakra, magnetising wealth, abundance, and luck.",
     intention: "Attract Wealth",
     benefits: [
-      "Three money magnets working as one ritual",
-      "Covers your locker, your purse, and your wrist",
-      "Saves ₹1,200 versus buying the pieces separately",
-      "Arrives energized, cleansed, and ready to place",
+      "Attracts business growth and professional success",
+      "Amplifies manifesting frequencies to attract money",
+      "Bio-magnetic therapy balances vital life energy",
     ],
     intentions: ["wealth"],
-    image: img("photo-1609216970141-d981d693484a"),
-    stockCount: 5,
-    isBundle: true,
+    type: "citrine",
+    image: "https://static.wixstatic.com/media/f059b5_26dcab2dfc554c99913cda28b3ba1a9a~mv2.png",
+    stockCount: 12,
+    wixCatalogItemId: "91750104-9bb9-4fbc-8cc9-24f99cb34dde",
+  },
+  {
+    id: "carnelian-bracelet",
+    name: "Carnelian Bracelet",
+    price: 1799,
+    description:
+      "Vibrant Carnelian beads working in synergy with bio-magnetic fields that stimulate local blood circulation, igniting energy, passion, and vitality.",
+    intention: "Energy & Vitality",
+    benefits: [
+      "Ignites inner fire, motivation, and creativity",
+      "Magnetic therapy stimulates circulation & oxygen flow",
+      "Clears physical fatigue and sluggish energy",
+    ],
+    intentions: ["vitality"],
+    type: "carnelian",
+    image: "https://static.wixstatic.com/media/f059b5_10d78768f66d4c50a9d630ce50dfa4f4~mv2.png",
+    stockCount: 7,
+    wixCatalogItemId: "3ca369d0-5813-48d0-b7ac-423bb673238b",
+  },
+  {
+    id: "lapis-lazuli-bracelet",
+    name: "Lapis Lazuli Bracelet",
+    price: 1899,
+    description:
+      "Deep blue Lapis Lazuli beads combine with circulation-boosting magnetic therapy to balance cognitive energy, quiet anxiety, and enhance deep concentration.",
+    intention: "Calm & Focus",
+    benefits: [
+      "Quiets mind chatter, overthinking, and anxiety",
+      "Enhances focus, wisdom, and intellectual performance",
+      "Magnetic field supports deeper sleep and stress relief",
+    ],
+    intentions: ["focus"],
+    type: "lapis-lazuli",
+    image: "https://static.wixstatic.com/media/f059b5_985f7bc64682498ca1ffc548a0fd14c6~mv2.png",
+    stockCount: 6,
+    wixCatalogItemId: "5177db65-d3a1-46c5-b614-57b1969b9b1a",
   },
 ];
 
@@ -279,7 +221,7 @@ export function getCategoryBySlug(slug: string): Category | undefined {
   return categories.find((category) => category.slug === slug);
 }
 
-// Intention categories match against `intentions`; type categories against `type`.
+// Intention categories match against `intentions`; stone categories against `type`.
 export function getProductsByCategory(category: Category): Product[] {
   if (category.group === "type") {
     return products.filter((product) => product.type === category.slug);

@@ -8,6 +8,7 @@ import {
   isSameOrigin,
 } from "@/lib/apiGuard";
 import { SUPPORT_EMAIL, BRAND_NAME } from "@/lib/commerce/config";
+import { brandMarkHtml, logoAttachments } from "@/lib/emailBrand";
 
 // Newsletter sign-up. Net-new (not in the Viora bundle) but built on the same
 // abuse-guard + nodemailer foundation as the contact route: notifies our support
@@ -60,10 +61,14 @@ export async function POST(req: Request) {
       to: SUPPORT_EMAIL,
       subject: `New Inner Circle sign-up: ${safe}`,
       text: `New newsletter subscriber: ${safe}`,
-      html: `<div style="font-family:Arial,sans-serif;color:#1a2338;">
-        <h2 style="color:#071a47;">New Inner Circle sign-up</h2>
-        <p style="font-size:16px;">✦ <strong>${safe}</strong></p>
+      html: `<div style="background:#f7f3eb;padding:24px 0;font-family:Arial,sans-serif;color:#1a2338;">
+        <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #eadfca;border-radius:14px;padding:28px;">
+          <div style="text-align:center;padding-bottom:12px;">${brandMarkHtml(110)}</div>
+          <h2 style="color:#071a47;text-align:center;margin:8px 0 16px;">New Inner Circle sign-up</h2>
+          <p style="font-size:16px;text-align:center;">✦ <strong>${safe}</strong></p>
+        </div>
       </div>`,
+      attachments: logoAttachments(),
     });
 
     return NextResponse.json({ ok: true });

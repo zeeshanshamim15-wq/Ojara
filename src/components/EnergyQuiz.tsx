@@ -6,38 +6,24 @@ import { getProductById, type Product } from "@/lib/mockData";
 import { formatPrice } from "@/lib/format";
 import AddToCartButton from "@/components/AddToCartButton";
 
-type Intention = "Wealth" | "Protection" | "Peace";
-type Style = "Raw Stones" | "Polished Gems" | "Wearable Amulets";
+type Intention = "Wealth" | "Protection" | "Vitality" | "Focus";
 
-// Recommendation matrix — every intention × style resolves to a real product.
-const MATCHES: Record<Intention, Record<Style, string>> = {
-  Wealth: {
-    "Raw Stones": "raw-pyrite-cluster",
-    "Polished Gems": "green-jade-zibu-coin",
-    "Wearable Amulets": "abundance-harmony-set",
-  },
-  Protection: {
-    "Raw Stones": "golden-vastu-turtle",
-    "Polished Gems": "tigers-eye-focus-stone",
-    "Wearable Amulets": "evil-eye-bracelet",
-  },
-  Peace: {
-    "Raw Stones": "chakra-crystal-tree",
-    "Polished Gems": "tigers-eye-focus-stone",
-    "Wearable Amulets": "evil-eye-bracelet",
-  },
+// Intention -> the bracelet that carries it. One axis, because the catalogue is
+// four bracelets that each own one intention: a second "what style?" question
+// (raw stones / polished gems / amulets) described a range we no longer sell and
+// pointed at products that no longer exist, so every answer 404'd.
+const MATCHES: Record<Intention, string> = {
+  Wealth: "citrine-bracelet",
+  Protection: "black-tourmaline-evil-eye",
+  Vitality: "carnelian-bracelet",
+  Focus: "lapis-lazuli-bracelet",
 };
 
 const intentions: { value: Intention; caption: string }[] = [
   { value: "Wealth", caption: "Abundance, drive, prosperity" },
   { value: "Protection", caption: "Shield your aura, ward off envy" },
-  { value: "Peace", caption: "Calm, clarity, grounded focus" },
-];
-
-const styles: { value: Style; caption: string }[] = [
-  { value: "Raw Stones", caption: "Untouched, natural energy" },
-  { value: "Polished Gems", caption: "Refined, carried close" },
-  { value: "Wearable Amulets", caption: "Worn as a daily talisman" },
+  { value: "Vitality", caption: "Energy, stamina, inner fire" },
+  { value: "Focus", caption: "Calm, clarity, grounded focus" },
 ];
 
 export default function EnergyQuiz({
@@ -49,7 +35,6 @@ export default function EnergyQuiz({
 }) {
   const [step, setStep] = useState(1);
   const [intention, setIntention] = useState<Intention | null>(null);
-  const [style, setStyle] = useState<Style | null>(null);
 
   // Lock scroll + close on Escape while open.
   useEffect(() => {
@@ -68,7 +53,6 @@ export default function EnergyQuiz({
   const reset = () => {
     setStep(1);
     setIntention(null);
-    setStyle(null);
   };
 
   const chooseIntention = (value: Intention) => {
@@ -76,13 +60,9 @@ export default function EnergyQuiz({
     setStep(2);
   };
 
-  const chooseStyle = (value: Style) => {
-    setStyle(value);
-    setStep(3);
-  };
-
-  const match: Product | undefined =
-    intention && style ? getProductById(MATCHES[intention][style]) : undefined;
+  const match: Product | undefined = intention
+    ? getProductById(MATCHES[intention])
+    : undefined;
 
   return (
     <div
@@ -95,7 +75,7 @@ export default function EnergyQuiz({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Find Your Stone quiz"
+        aria-label="Find Your Bracelet quiz"
         onClick={(e) => e.stopPropagation()}
         className={`relative w-full max-w-lg overflow-hidden rounded-3xl bg-ivory shadow-2xl transition-all duration-500 ease-out ${
           open ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"
@@ -125,7 +105,7 @@ export default function EnergyQuiz({
 
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 pt-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2].map((s) => (
             <span
               key={s}
               className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
@@ -141,7 +121,7 @@ export default function EnergyQuiz({
 
         <div className="px-8 pb-10 pt-6 sm:px-10">
           <p className="text-center text-xs uppercase tracking-[0.4em] text-champagne-gold">
-            Find Your Stone
+            Find Your Bracelet
           </p>
 
           {/* STEP 1 */}
@@ -158,35 +138,14 @@ export default function EnergyQuiz({
             </QuizStep>
           )}
 
-          {/* STEP 2 */}
-          {step === 2 && (
-            <QuizStep title="What draws your eye?">
-              {styles.map((option) => (
-                <QuizOption
-                  key={option.value}
-                  label={option.value}
-                  caption={option.caption}
-                  onClick={() => chooseStyle(option.value)}
-                />
-              ))}
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="mt-2 cursor-pointer text-xs uppercase tracking-[0.2em] text-midnight-navy/70 transition-colors hover:text-midnight-navy active:scale-95"
-              >
-                ← Back
-              </button>
-            </QuizStep>
-          )}
-
-          {/* STEP 3 — result */}
-          {step === 3 && match && (
+          {/* STEP 2 — result */}
+          {step === 2 && match && (
             <div className="mt-8 text-center animate-fade-in-up">
               <h3 className="font-heading text-2xl text-midnight-navy sm:text-3xl">
                 Your Perfect Match
               </h3>
               <p className="mt-2 text-sm text-midnight-navy/70">
-                For {intention?.toLowerCase()}, worn as {style?.toLowerCase()}.
+                Worn daily, for {intention?.toLowerCase()}.
               </p>
 
               <div className="mx-auto mt-6 max-w-xs overflow-hidden rounded-2xl border border-champagne-gold/25 bg-sand/40">

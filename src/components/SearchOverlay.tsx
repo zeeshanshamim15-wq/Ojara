@@ -7,9 +7,9 @@ import { toast } from "sonner";
 // Trending searches deep-link to the most relevant piece so the overlay is
 // useful even before real search is wired up.
 const trending = [
-  { label: "Pyrite", href: "/product/raw-pyrite-cluster" },
-  { label: "Evil Eye", href: "/product/evil-eye-bracelet" },
-  { label: "Protection", href: "/product/evil-eye-bracelet" },
+  { label: "Evil Eye", href: "/product/black-tourmaline-evil-eye" },
+  { label: "Citrine", href: "/product/citrine-bracelet" },
+  { label: "Lapis Lazuli", href: "/product/lapis-lazuli-bracelet" },
 ];
 
 export default function SearchOverlay({

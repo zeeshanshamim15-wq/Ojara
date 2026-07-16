@@ -8,6 +8,7 @@ import {
   isSameOrigin,
 } from "@/lib/apiGuard";
 import { SUPPORT_EMAIL, BRAND_NAME } from "@/lib/commerce/config";
+import { brandMarkHtml, logoAttachments } from "@/lib/emailBrand";
 
 // Contact / enquiry form → emails our support inbox, replyTo the customer. (§11)
 export async function POST(req: Request) {
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
       ),
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a2338;">
+          <div style="text-align:center;padding:8px 0 16px;">${brandMarkHtml(110)}</div>
           <h2 style="color:#071a47;margin-bottom:8px;">New website enquiry</h2>
           <table style="border-collapse:collapse;width:100%;margin-top:12px;">
             <tr><td style="padding:6px 8px;font-weight:bold;width:90px;">Name</td><td style="padding:6px 8px;">${escapeHtml(
@@ -98,6 +100,7 @@ export async function POST(req: Request) {
           )}</div>
         </div>
       `,
+      attachments: logoAttachments(),
     });
 
     return NextResponse.json({ ok: true });

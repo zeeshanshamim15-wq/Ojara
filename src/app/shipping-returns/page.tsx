@@ -43,7 +43,7 @@ export default function ShippingReturnsPage() {
           heading: "30-Day Authentic Returns",
           body: [
             "If your piece doesn't resonate, you may return it within 30 days of delivery for a refund or exchange. Items must be unused and in their original packaging.",
-            "To begin a return, email care@ojara.com with your order number. We'll guide you through the process. Return shipping is the responsibility of the customer unless the item arrived damaged or incorrect.",
+            "To begin a return, email ojara.jewel@gmail.com with your order number. We'll guide you through the process. Return shipping is the responsibility of the customer unless the item arrived damaged or incorrect.",
           ],
         },
         {

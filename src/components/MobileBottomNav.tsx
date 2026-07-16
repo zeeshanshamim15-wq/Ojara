@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import dynamic from "next/dynamic";
 
 const SearchOverlay = dynamic(() => import("@/components/SearchOverlay"), { ssr: false });
-const AuthDrawer = dynamic(() => import("@/components/AuthDrawer"), { ssr: false });
 
 type Tab = {
   id: string;
@@ -24,9 +23,10 @@ export default function MobileBottomNav() {
   const pathname = usePathname() || "/";
   const cartQuantity = useCartStore(selectTotalQuantity);
   const openCart = useCartStore((state) => state.openCart);
+  const openAuth = useCartStore((state) => state.openAuth);
+  const authOpen = useCartStore((state) => state.isAuthOpen);
 
   const [searchOpen, setSearchOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
 
   const iconProps = {
     xmlns: "http://www.w3.org/2000/svg",
@@ -79,7 +79,7 @@ export default function MobileBottomNav() {
     {
       id: "profile",
       label: "Profile",
-      onTap: () => setAuthOpen(true),
+      onTap: openAuth,
       match: () => authOpen,
       icon: (active) => (
         <svg
@@ -110,9 +110,11 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      {/* Sticky Discount Banner */}
+      {/* Sticky banner. Was "FLAT ₹50 DISCOUNT ON PREPAID ORDERS" — pulled while
+          prepaid is disabled (see PREPAID_ENABLED in CheckoutModal). Restore it
+          when prepaid comes back. */}
       <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] left-0 w-full z-[70] bg-midnight-navy border-t border-champagne-gold/30 text-champagne-gold py-2 text-center text-[10px] sm:text-xs font-semibold tracking-widest uppercase md:hidden">
-        ✦ FLAT ₹50 DISCOUNT ON PREPAID ORDERS ✦
+        ✦ CASH ON DELIVERY · FREE PAN-INDIA SHIPPING ✦
       </div>
 
       <nav
@@ -181,7 +183,6 @@ export default function MobileBottomNav() {
 
       {/* Overlays controlled by bottom nav */}
       <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <AuthDrawer open={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );
 }

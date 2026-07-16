@@ -92,7 +92,7 @@ export default function RecentlyViewed({
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-champagne-gold/20 active:scale-95"
+              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out md:hover:-translate-y-1 md:hover:shadow-xl md:hover:shadow-champagne-gold/20 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image

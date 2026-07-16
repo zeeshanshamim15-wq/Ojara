@@ -1,7 +1,9 @@
-import { products } from "@/lib/mockData";
+import { getAllProducts } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 
-export default function ProductGrid() {
+export default async function ProductGrid() {
+  const products = await getAllProducts();
+
   return (
     <section
       id="collection"

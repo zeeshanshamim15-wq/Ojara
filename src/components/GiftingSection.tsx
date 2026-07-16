@@ -1,29 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
+import { getAllProducts } from "@/lib/catalog";
 
-// Curated gift sets mapped to push higher Average Order Value (AOV).
-const giftSets = [
-  {
-    id: "abundance-harmony-set",
-    name: "The Abundance Harmony Set (Complete Wealth Ritual)",
-    price: 5999,
-    originalPrice: 7199,
-    tagline: "The ultimate money-magnet combination for home, office, and wardrobe.",
-    image: "https://images.unsplash.com/photo-1609216970141-d981d693484a?auto=format&fit=crop&w=800&q=80",
-    benefits: ["Raw Pyrite Cluster", "Green Jade Zibu Coin", "Citrine Bracelet"],
-  },
-  {
-    id: "golden-vastu-turtle",
-    name: "Golden Vastu & Harmony Gift Box",
-    price: 3499,
-    tagline: "A prestigious housewarming or griha pravesh gift for home alignment.",
-    image: "https://images.unsplash.com/photo-1781579327044-da2da04b0a87?auto=format&fit=crop&w=800&q=80",
-    benefits: ["Golden Vastu Turtle", "7 Chakra Tree", "Sage Cleansing Pack"],
-  },
-];
+export default async function GiftingSection() {
+  const products = await getAllProducts();
+  const giftSets = products.slice(0, 2).map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    originalPrice: p.originalPrice,
+    tagline: p.description.slice(0, 100) + (p.description.length > 100 ? "..." : ""),
+    image: p.image,
+    benefits: p.benefits,
+  }));
 
-export default function GiftingSection() {
   return (
     <section className="border-y border-champagne-gold/30 bg-midnight-navy text-ivory px-6 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
@@ -96,7 +87,7 @@ export default function GiftingSection() {
                 </div>
 
                 <Link
-                  href={`/product/${gift.id === "golden-vastu-turtle" ? "golden-vastu-turtle" : "abundance-harmony-set"}`}
+                  href={`/product/${gift.id}`}
                   prefetch
                   className="cursor-pointer rounded-full bg-champagne-gold px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95"
                 >
