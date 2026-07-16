@@ -105,39 +105,55 @@ summary::-webkit-details-marker {
   display: none;
 }
 
-/* Global Form Inputs Standardization */
-input[type="text"],
-input[type="email"],
-input[type="search"],
-input[type="tel"],
-input[type="password"],
-input[type="number"],
-textarea,
-select {
-  border: 1px solid rgba(7, 26, 71, 0.3);
-  background-color: transparent;
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  color: #071A47;
-  transition: all 150ms ease-in-out;
-}
+/* Global form input defaults.
+ *
+ * These MUST stay inside `@layer base`, and MUST NOT use `!important`.
+ *
+ * They assume a light (ivory) background: navy text, navy border, transparent
+ * fill. Written as bare `input[type=...]` rules outside any layer, they outrank
+ * every Tailwind utility — an attribute selector scores (0,1,1) against a class's
+ * (0,1,0) — so a component that styles its own field was silently overruled. The
+ * auth drawer sits on midnight navy and its `bg-ivory/10 text-ivory` never applied:
+ * navy text on a navy panel, with a navy `!important` placeholder to match. The
+ * fields rendered completely invisible — the labels were the only thing on screen.
+ *
+ * In `@layer base` the cascade settles this by layer, not specificity: any utility
+ * beats any base rule, so light-background forms keep these defaults while dark
+ * surfaces can simply style their own. `!important` would defeat the point — an
+ * important base declaration outranks even important utilities.
+ */
+@layer base {
+  input[type="text"],
+  input[type="email"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    border: 1px solid rgba(7, 26, 71, 0.3);
+    background-color: transparent;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    color: #071A47;
+    transition: all 150ms ease-in-out;
+  }
 
-/* Highly visible placeholder text */
-input::placeholder,
-textarea::placeholder {
-  color: rgba(7, 26, 71, 0.6) !important;
-}
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(7, 26, 71, 0.6);
+  }
 
-/* Focus styles */
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="search"]:focus,
-input[type="tel"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus,
-textarea:focus,
-select:focus {
-  outline: none !important;
-  border-color: #071A47 !important;
-  box-shadow: 0 0 0 1px #071A47 !important;
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="search"]:focus,
+  input[type="tel"]:focus,
+  input[type="password"]:focus,
+  input[type="number"]:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: #071A47;
+    box-shadow: 0 0 0 1px #071A47;
+  }
 }

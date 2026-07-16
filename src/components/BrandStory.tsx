@@ -22,28 +22,35 @@ export default function BrandStory() {
             Our Philosophy
           </span>
 
+          {/* Copy supplied by the client (2026-07-17). The previous version led on
+              "The Essence of Ojas" and claimed therapeutic magnets stimulate blood
+              circulation and balance the body's magnetic field — the brand sells
+              gemstone bracelets and makes no such claim. */}
           <h2 className="mt-8 font-heading text-4xl uppercase leading-[1.35] tracking-[0.15em] sm:text-5xl sm:tracking-[0.2em]">
-            The Essence
+            More Than
             <br />
-            of Ojas
+            An Accessory
           </h2>
 
           <div className="mt-10 space-y-6 text-base leading-8 text-ivory/90">
             <p>
-              In ancient wisdom, <span className="text-champagne-gold">Ojas</span>{" "}
-              is the vital essence — the quiet energy and radiance that lives
-              within, the source of vitality, protection, and calm.
+              Our jewellery is designed to become more than an accessory. It
+              becomes a personal ritual — a quiet reminder of your goals, a symbol
+              of the energy you wish to invite into your life.
             </p>
             <p>
-              Every OJARA magnetic bracelet combines the metaphysical healing frequency of natural crystals with modern bio-magnetic therapy. Therapeutic magnets stimulate blood circulation and balance the body&rsquo;s magnetic field, creating a synergistic effect that amplifies the stone&rsquo;s positive energy.
+              Whether you&rsquo;re manifesting new opportunities, embracing
+              self-growth, or simply drawn to the beauty of natural gemstones,{" "}
+              <span className="text-champagne-gold">OJARA</span> creates timeless
+              pieces that connect elegance with intention.
             </p>
             <p>
-              Designed for everyday wear, these bracelets serve as active anchors for your intentions — shielding your aura, balancing your energy, and steadying your spirit.
+              Every crystal has a story. The next chapter is yours to write.
             </p>
           </div>
 
           <p className="mt-12 font-heading text-lg uppercase tracking-[0.35em] text-champagne-gold">
-            Magnify Your Intention
+            Wear Your Intention
           </p>
         </div>
       </div>

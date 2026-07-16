@@ -62,40 +62,47 @@ export interface Category {
 }
 
 // Drives both the Shop mega menu and the /category/[slug] routes.
+//
+// COPY RULE (client, 2026-07-17): OJARA sells natural gemstone bracelets. There is
+// no magnet in the product, so nothing here may reference magnetic/bio-magnetic
+// fields or "therapy". Nor may it promise a physical or psychological effect —
+// "boost stamina", "clear fatigue", "soothe anxiety", "circulation" are health
+// claims we cannot make (and ASCI would not allow). Write intention and tradition:
+// what the stone is *worn as*, not what it does to the body. See /terms.
 export const categories: Category[] = [
   {
     slug: "protection",
     label: "Protection & Evil Eye",
     title: "Protection & Evil Eye — Shield Your Aura",
     tagline:
-      "Shield yourself from nazar dosh, envy, and negative energy with authentic protective stones combined with therapeutic bio-magnetic beads.",
+      "Black Tourmaline and evil eye bracelets, worn in the old tradition of turning away nazar and keeping your energy your own.",
     group: "intention",
     image: "/images/category-protection.jpg",
   },
   {
     slug: "wealth",
     label: "Wealth & Success",
-    title: "Wealth & Success — Money Magnets",
+    title: "Wealth & Success",
     tagline:
-      "Citrine combined with bio-magnetic fields to align your frequencies, pull opportunities, and attract financial success.",
+      "Citrine, long called the merchant's stone — worn as a daily reminder of the abundance you are working toward.",
     group: "intention",
     image: "/images/category-wealth.jpg",
   },
   {
     slug: "vitality",
     label: "Energy & Vitality",
-    title: "Energy & Vitality — Power & Stamina",
+    title: "Energy & Vitality",
     tagline:
-      "Ignite your inner fire, boost physical stamina, and clear fatigue with Carnelian energy and circulation-boosting magnetic therapy.",
+      "Carnelian, the stone of warmth and courage — for the days you want to feel bold and begin again.",
     group: "intention",
     image: "/images/category-vitality.jpg",
   },
   {
     slug: "focus",
     label: "Calm & Focus",
-    title: "Calm & Focus — Mind Clarity",
+    title: "Calm & Focus",
     tagline:
-      "Soothe anxiety, quiet mental chatter, and sharpen your intellect with Lapis Lazuli and harmonizing magnetic frequency therapy.",
+      "Lapis Lazuli, the deep blue stone of truth and clarity — a quiet anchor for a busy mind.",
     group: "intention",
     image: "/images/category-focus.jpg",
   },
@@ -103,34 +110,34 @@ export const categories: Category[] = [
   {
     slug: "tourmaline",
     label: "Black Tourmaline",
-    title: "Black Tourmaline Magnetic Bracelets",
+    title: "Black Tourmaline Bracelets",
     tagline:
-      "The ultimate grounding and protective shield, absorbing negative frequencies and shielding from buri nazar.",
+      "The grounding stone, traditionally worn as a shield against buri nazar.",
     group: "type",
     image: "/images/category-protection.jpg",
   },
   {
     slug: "carnelian",
     label: "Carnelian",
-    title: "Carnelian Magnetic Bracelets",
+    title: "Carnelian Bracelets",
     tagline:
-      "Bold energy for creative fire, courage, and vitality, amplified by healing magnetic elements.",
+      "A bold, warm stone long tied to creative fire, courage, and vitality.",
     group: "type",
     image: "/images/category-vitality.jpg",
   },
   {
     slug: "citrine",
     label: "Citrine",
-    title: "Citrine Magnetic Bracelets",
+    title: "Citrine Bracelets",
     tagline:
-      "The merchant stone of pure wealth, abundance, and joy, designed to magnetise professional growth.",
+      "The merchant stone of wealth, abundance, and joy.",
     group: "type",
     image: "/images/category-wealth.jpg",
   },
   {
     slug: "lapis-lazuli",
     label: "Lapis Lazuli",
-    title: "Lapis Lazuli Magnetic Bracelets",
+    title: "Lapis Lazuli Bracelets",
     tagline:
       "The deep blue stone of truth, wisdom, and intellectual focus, steadying an overactive mind.",
     group: "type",
@@ -144,12 +151,12 @@ export const products: Product[] = [
     name: "Black Tourmaline Evil Eye Bracelet",
     price: 1899,
     description:
-      "Authentic Black Tourmaline beads paired with high-gauss bio-magnetic elements to repel negative energy and shield your aura from nazar dosh.",
+      "Authentic Black Tourmaline beads strung with a traditional evil eye — worn to turn away nazar and keep your own energy close.",
     intention: "Ward Off Negativity",
     benefits: [
-      "Removes nazar dosh and buri nazar",
-      "Shields your aura from external negative energies",
-      "Magnetic therapy supports deep cellular detoxification",
+      "Worn in the old tradition of turning away nazar and buri nazar",
+      "Black Tourmaline, long kept as a grounding stone",
+      "Natural hand-finished beads, cleansed before dispatch",
     ],
     intentions: ["protection"],
     type: "tourmaline",
@@ -162,12 +169,12 @@ export const products: Product[] = [
     name: "Citrine Bracelet",
     price: 1999,
     description:
-      "Vibrant Citrine stones aligned with bio-magnetic fields to activate your solar plexus chakra, magnetising wealth, abundance, and luck.",
+      "Vibrant natural Citrine — long called the merchant's stone, worn as a daily reminder of the abundance you are building.",
     intention: "Attract Wealth",
     benefits: [
-      "Attracts business growth and professional success",
-      "Amplifies manifesting frequencies to attract money",
-      "Bio-magnetic therapy balances vital life energy",
+      "Citrine, traditionally the merchant's stone of abundance",
+      "A daily reminder of the opportunity you are working toward",
+      "Natural hand-finished beads, cleansed before dispatch",
     ],
     intentions: ["wealth"],
     type: "citrine",
@@ -180,12 +187,12 @@ export const products: Product[] = [
     name: "Carnelian Bracelet",
     price: 1799,
     description:
-      "Vibrant Carnelian beads working in synergy with bio-magnetic fields that stimulate local blood circulation, igniting energy, passion, and vitality.",
+      "Warm Carnelian beads — the stone of courage and creative fire, for the days you want to feel bold.",
     intention: "Energy & Vitality",
     benefits: [
-      "Ignites inner fire, motivation, and creativity",
-      "Magnetic therapy stimulates circulation & oxygen flow",
-      "Clears physical fatigue and sluggish energy",
+      "Carnelian, long tied to courage and creative fire",
+      "For the days you want to feel bold and begin again",
+      "Natural hand-finished beads, cleansed before dispatch",
     ],
     intentions: ["vitality"],
     type: "carnelian",
@@ -198,12 +205,12 @@ export const products: Product[] = [
     name: "Lapis Lazuli Bracelet",
     price: 1899,
     description:
-      "Deep blue Lapis Lazuli beads combine with circulation-boosting magnetic therapy to balance cognitive energy, quiet anxiety, and enhance deep concentration.",
+      "Deep blue Lapis Lazuli beads — the stone of truth and clarity, a quiet anchor for a busy mind.",
     intention: "Calm & Focus",
     benefits: [
-      "Quiets mind chatter, overthinking, and anxiety",
-      "Enhances focus, wisdom, and intellectual performance",
-      "Magnetic field supports deeper sleep and stress relief",
+      "Lapis Lazuli, the old stone of truth and wisdom",
+      "A quiet anchor to return to on a busy day",
+      "Natural hand-finished beads, cleansed before dispatch",
     ],
     intentions: ["focus"],
     type: "lapis-lazuli",

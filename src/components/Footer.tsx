@@ -1,32 +1,46 @@
 import Link from "next/link";
 import Image from "next/image";
+import { RAZORPAY_ENABLED } from "@/lib/commerce/config";
 
 interface FooterColumn {
   title: string;
   links: { label: string; href: string }[];
 }
 
-// TODO(owner): swap the Facebook href once the real page url arrives — it is a
-// placeholder today and deliberately does NOT link out.
 const socials: { label: string; href: string | null; icon: string }[] = [
   {
     label: "OJARA on Instagram",
     href: "https://www.instagram.com/ojara.india",
     icon: "/instagram.png",
   },
-  { label: "OJARA on Facebook", href: null, icon: "/facebook.png" },
+  {
+    label: "OJARA on Facebook",
+    // Supplied by the owner 2026-07-17. The ?mibextid tracking param the share
+    // sheet appends is dropped; the bare share url resolves the same.
+    href: "https://www.facebook.com/share/1E5iVdYJwb/",
+    icon: "/facebook.png",
+  },
 ];
 
-// Payment methods we actually accept: Razorpay covers cards/UPI/RuPay, plus COD.
-// (public/paypal.png exists but PayPal is not offered — showing it would promise
-// a checkout option that doesn't exist.)
-const payments: { label: string; src: string }[] = [
+// Badge only what checkout can actually take. The card/UPI/RuPay marks all depend on
+// Razorpay, which is off until its keys are set — until then COD is the only option
+// a shopper can pick, and showing the rest promises a checkout we can't honour (the
+// same reason the prepaid discount line is pulled from ProductCtas). Set the Razorpay
+// keys and these return on their own; nothing here needs editing.
+// (public/paypal.png exists but PayPal is not offered.)
+const CASH_ON_DELIVERY = {
+  label: "Cash on Delivery",
+  src: "/cash-on-delivery.png",
+};
+const PREPAID_METHODS = [
   { label: "Visa", src: "/visa.png" },
   { label: "Mastercard", src: "/mastercard.png" },
   { label: "UPI", src: "/upi.png" },
   { label: "RuPay", src: "/rupay.png" },
-  { label: "Cash on Delivery", src: "/cash-on-delivery.png" },
 ];
+const payments: { label: string; src: string }[] = RAZORPAY_ENABLED
+  ? [...PREPAID_METHODS, CASH_ON_DELIVERY]
+  : [CASH_ON_DELIVERY];
 
 const columns: FooterColumn[] = [
   {
@@ -74,7 +88,8 @@ export default function Footer() {
               </p>
             </div>
             <p className="mt-4 text-sm leading-6 text-champagne-gold/90">
-              Magnetic crystal bracelets, charged to shift your energy every day.
+              Natural crystal bracelets, cleansed and charged — worn as a daily
+              reminder of your intention.
             </p>
 
             {/* Social */}

@@ -33,9 +33,24 @@ export const EMAIL_ENABLED = !!(
   process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
 );
 
-/** Normalised site URL (no trailing slash). Used in emails + redirects. */
+/**
+ * Normalised site URL (no trailing slash). Used in emails + redirects.
+ *
+ * Order confirmations went out with "Visit OJARA" and the footer both pointing at
+ * localhost:3000 — dead links in a real customer's inbox. So a localhost value is
+ * treated as unset whenever we're running on Vercel, where the platform always
+ * supplies the real production host itself. NEXT_PUBLIC_SITE_URL still wins for a
+ * custom domain; it just can't drag production back to localhost.
+ */
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+const configuredIsLocal =
+  !!configuredSiteUrl && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(configuredSiteUrl);
+
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  (configuredSiteUrl && !(vercelHost && configuredIsLocal) ? configuredSiteUrl : "") ||
+  (vercelHost ? `https://${vercelHost}` : "") ||
+  "http://localhost:3000"
 ).replace(/\/$/, "");
 
 export const SUPPORT_EMAIL =

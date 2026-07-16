@@ -15,16 +15,29 @@ export const logoExists = () => existsSync(LOGO_PATH);
 
 const NAVY = "#071A47";
 
-/** Text fallback used when public/logo.png is missing. */
+// The wordmark under the mark. The site sets OJARA in Cinzel, but a webfont can't
+// be relied on in an inbox (Gmail strips @font-face), so this uses the nearest
+// web-safe serif with the same wide tracking. `padding-left` offsets the trailing
+// letter-space that would otherwise push the centred text visually left.
+const wordmarkText = (size: number) =>
+  `<div style="font-family:Georgia,'Times New Roman',serif;font-size:${size}px;letter-spacing:${Math.round(
+    size * 0.32
+  )}px;padding-left:${Math.round(size * 0.32)}px;color:${NAVY};text-align:center;margin-top:12px;">${BRAND_NAME}</div>`;
+
+/** Text-only fallback used when public/logo.png is missing. */
 const wordmark = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:30px;letter-spacing:8px;color:${NAVY};font-weight:bold;">✦ ${BRAND_NAME}</div>`;
 
 /**
- * The brand mark for the top of an email body.
+ * The brand mark for the top of an email body: the ring logo with OJARA set
+ * beneath it, matching the site's lockup — the logo alone read as an unlabelled
+ * circle in the inbox.
  * @param width rendered px width; keep small — these are inboxes, not pages.
  */
 export const brandMarkHtml = (width = 132) =>
   logoExists()
-    ? `<img src="cid:${LOGO_CID}" width="${width}" alt="${BRAND_NAME}" style="display:block;margin:0 auto;width:${width}px;max-width:60%;height:auto;border:0;outline:none;text-decoration:none;" />`
+    ? `<img src="cid:${LOGO_CID}" width="${width}" alt="${BRAND_NAME}" style="display:block;margin:0 auto;width:${width}px;max-width:60%;height:auto;border:0;outline:none;text-decoration:none;" />${wordmarkText(
+        Math.round(width * 0.17)
+      )}`
     : wordmark;
 
 /**

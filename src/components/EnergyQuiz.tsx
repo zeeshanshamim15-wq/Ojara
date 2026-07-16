@@ -22,7 +22,7 @@ const MATCHES: Record<Intention, string> = {
 const intentions: { value: Intention; caption: string }[] = [
   { value: "Wealth", caption: "Abundance, drive, prosperity" },
   { value: "Protection", caption: "Shield your aura, ward off envy" },
-  { value: "Vitality", caption: "Energy, stamina, inner fire" },
+  { value: "Vitality", caption: "Energy, drive, inner fire" },
   { value: "Focus", caption: "Calm, clarity, grounded focus" },
 ];
 

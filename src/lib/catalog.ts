@@ -105,7 +105,11 @@ function mapWixProduct(p: WixRawProduct): Product {
     price: Number(price),
     originalPrice: originalPrice ? Number(originalPrice) : undefined,
     description: cleanDescription || (mockP ? mockP.description : ""),
-    intention: mockP ? mockP.intention : "Sacred Healing",
+    // Fallback for a Wix product with no mockData twin (today: Cats Eyes). "Sacred
+    // Healing" was the old default and reads as a therapeutic claim — the brand
+    // makes none. Such a product also renders with no benefit bullets and no
+    // category, so it needs an entry in mockData rather than a better default.
+    intention: mockP ? mockP.intention : "Wear Your Intention",
     benefits: mockP ? mockP.benefits : [],
     intentions: mockP ? mockP.intentions : [],
     type: mockP ? mockP.type : undefined,
@@ -253,7 +257,7 @@ export const getCategories = async (): Promise<Category[]> => {
         title: col.name || "",
         tagline:
           col.description ||
-          "Energized magnetic crystal bracelets curated for your intentions.",
+          "Natural crystal bracelets, curated for your intentions.",
         group: col.slug === "all-products" ? "type" : "intention",
         image: imageUrl,
         wixCollectionId: col.id,

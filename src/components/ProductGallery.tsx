@@ -38,6 +38,9 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
         }}
         onMouseMove={handleMouseMove}
       >
+        {/* object-contain, not object-cover: several of the Wix shots are taller
+            infographics whose text ran off the top and bottom of this square box.
+            Containing letterboxes them against bg-sand instead of cropping. */}
         {isVideo ? (
           <video
             src={activeMedia}
@@ -45,14 +48,14 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             muted
             loop
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         ) : (
           <Image
             src={activeMedia}
             alt={`${productName} - View ${activeIndex + 1}`}
             fill
-            className="object-cover transition-transform duration-200 ease-out"
+            className="object-contain transition-transform duration-200 ease-out"
             style={isZoomed ? zoomStyle : { transform: "scale(1)" }}
             priority
           />
@@ -64,8 +67,13 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
         </div>
       </div>
 
-      {/* Thumbnails */}
-      <div className="flex items-center gap-3 overflow-x-auto pb-2 hide-scrollbar">
+      {/* Thumbnails. Centred under the main image, but the row still scrolls if a
+          product ever carries more shots than fit. `w-max mx-auto` is what allows
+          both: plain `justify-center` centres fine until the row overflows, at which
+          point it pushes the first thumbnail past the scroll origin and it can never
+          be reached. */}
+      <div className="overflow-x-auto pb-2 hide-scrollbar">
+        <div className="flex w-max mx-auto items-center gap-3">
         {images.map((img, idx) => {
           const isThumbVideo = img.endsWith(".mp4");
           return (
@@ -101,6 +109,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -42,7 +42,10 @@ export default function EnergyGuideChat() {
         ...prev,
         {
           role: "guide",
-          text: "Based on your energy, I highly recommend the Raw Pyrite Cluster. It is a powerful magnet for abundance and success. Shall I show you the details?",
+          // Canned reply — the same words come back no matter what is typed. It used
+          // to recommend a "Raw Pyrite Cluster", a product OJARA has never sold. Keep
+          // it to what is true of every piece and hand the shopper somewhere real.
+          text: "Thank you for writing in. Every OJARA piece is a natural gemstone bracelet — Citrine for abundance, Black Tourmaline for protection, Carnelian for courage, Lapis Lazuli for clarity. Browse the collection, or write to us at hello@ojara.in and a guide will help you choose.",
         },
       ]);
       setIsTyping(false);
@@ -50,7 +53,11 @@ export default function EnergyGuideChat() {
   };
 
   return (
-    <div className="fixed bottom-[calc(96px+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[85] flex flex-col items-end print:hidden font-sans">
+    // The wrapper is as tall as the *open* panel (~384x532) even while collapsed, so
+    // it must not take clicks itself — it sat invisibly over the Buy Now button and,
+    // on mobile (panel is w-[calc(100vw-3rem)]), over most of the screen. Children
+    // opt back in: the bubble always, the panel only when open.
+    <div className="pointer-events-none fixed bottom-[calc(96px+env(safe-area-inset-bottom))] md:bottom-6 right-6 z-[85] flex flex-col items-end print:hidden font-sans">
       {/* Slide-up Chat Window */}
       <div
         role="dialog"
@@ -192,7 +199,7 @@ export default function EnergyGuideChat() {
         aria-label={open ? "Close Energy Guide Chat" : "Chat with an Energy Guide"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="group flex cursor-pointer items-center gap-0 self-end rounded-full bg-champagne-gold py-3 pl-5 pr-3 text-midnight-navy shadow-lg shadow-midnight-navy/25 outline-none transition-all duration-150 hover:shadow-xl active:scale-95"
+        className="pointer-events-auto group flex cursor-pointer items-center gap-0 self-end rounded-full bg-champagne-gold py-3 pl-5 pr-3 text-midnight-navy shadow-lg shadow-midnight-navy/25 outline-none transition-all duration-150 hover:shadow-xl active:scale-95"
       >
         <span
           className={`overflow-hidden whitespace-nowrap text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-500 ease-out ${

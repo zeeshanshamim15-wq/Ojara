@@ -79,7 +79,7 @@ export default function Newsletter() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Your email address"
               aria-label="Email address"
-              className="flex-1 rounded-md border border-midnight-navy/30 bg-transparent px-4 py-3 text-center text-sm tracking-wide text-midnight-navy placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy sm:text-left"
+              className="flex-1 rounded-md border border-midnight-navy/30 bg-ivory px-4 py-3 text-center text-sm tracking-wide text-midnight-navy placeholder:text-midnight-navy/50 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy sm:text-left"
             />
             <button
               type="submit"

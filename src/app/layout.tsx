@@ -27,12 +27,14 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "OJARA | Magnify Your Intention",
+  // Bracelets only — this used to advertise chakra trees, jade coins, pyrite and
+  // Vastu talismans, none of which OJARA sells.
   description:
-    "OJARA offers sacred crystals and spiritual objects — pyrite for wealth, evil eye for protection, chakra trees, jade coins, and Vastu talismans. Rooted in Ojas, the ancient essence of vital energy, each piece is cleansed and charged to attract abundance, protect your aura, and magnify your intent.",
+    "OJARA makes bracelets of natural gemstones — Black Tourmaline and evil eye for protection, Citrine for abundance, Carnelian for courage, Lapis Lazuli for clarity. Each piece is cleansed and charged before it reaches you, and worn as a daily reminder of your intention.",
   openGraph: {
     title: "OJARA | Magnify Your Intention",
     description:
-      "Sacred crystals and manifestation objects, cleansed and charged to attract abundance, protect your aura, and magnify your intent.",
+      "Bracelets of natural gemstones, cleansed and charged — worn as a daily reminder of your intention.",
     siteName: "OJARA",
     type: "website",
   },

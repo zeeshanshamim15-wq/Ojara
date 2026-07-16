@@ -71,8 +71,12 @@ const COPY: Record<MODE, { eyebrow: string; title: string; cta: string }> = {
 //
 // Now: a lighter translucent fill lifts the box off the panel, and the border is
 // opaque enough to define an edge on its own.
+// A solid ivory field on the navy panel. A translucent fill (bg-ivory/10) was too
+// close to the panel behind it to read as somewhere you type — the owner's note was
+// that the box simply wasn't visible. Ivory + navy text is the brand's own pairing
+// and unmistakably a form field.
 const fieldClass =
-  "w-full rounded-md border border-champagne-gold/60 bg-ivory/10 px-5 py-3 text-sm text-ivory placeholder:text-ivory/50 transition-all duration-150 ease-out focus:border-champagne-gold focus:bg-ivory/15 focus:outline-none focus:ring-2 focus:ring-champagne-gold/40";
+  "w-full rounded-md border border-champagne-gold/60 bg-ivory px-5 py-3 text-sm text-midnight-navy placeholder:text-midnight-navy/45 transition-all duration-150 ease-out focus:border-champagne-gold focus:outline-none focus:ring-2 focus:ring-champagne-gold/40";
 
 const labelClass =
   "mb-2 block text-[0.65rem] uppercase tracking-[0.3em] text-champagne-gold/90";

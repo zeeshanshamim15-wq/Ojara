@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { getCategoryBySlug, getProductById } from "@/lib/catalog";
 import { products } from "@/lib/mockData";
 import { formatPrice } from "@/lib/format";
-import StickyAddToBag from "@/components/StickyAddToBag";
 import CompleteYourRitual from "@/components/CompleteYourRitual";
 import RitualAccordion from "@/components/RitualAccordion";
 import ProductReviews from "@/components/ProductReviews";
@@ -202,16 +201,18 @@ export default async function ProductDetailPage({
             )}
           </h1>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <p className="text-3xl font-bold text-midnight-navy">
+          {/* Price is the second thing the eye should land on after the name, so it
+              gets its own row and outweighs the body copy around it. */}
+          <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-2">
+            <p className="text-4xl font-bold tracking-tight text-midnight-navy sm:text-5xl">
               {formatPrice(product.price)}
             </p>
             {product.originalPrice && (
               <>
-                <p className="text-base text-midnight-navy/40 line-through">
+                <p className="text-lg text-midnight-navy/40 line-through">
                   {formatPrice(product.originalPrice)}
                 </p>
-                <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold rounded">
+                <span className="rounded border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                   Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                 </span>
               </>
@@ -272,7 +273,7 @@ export default async function ProductDetailPage({
             <p className="text-sm text-midnight-navy/80">
               Delivery expected in{" "}
               <span className="font-semibold text-midnight-navy">6–7 days</span>{" "}
-              &middot; Free shipping across India
+              &middot; Free shipping &middot; Cash on Delivery
             </p>
           </div>
 
@@ -326,9 +327,6 @@ export default async function ProductDetailPage({
 
       {/* Personalised history — reads from persisted browsing state */}
       <RecentlyViewed currentId={product.id} />
-
-      {/* Scroll-triggered sticky checkout nudge */}
-      <StickyAddToBag product={product} />
     </div>
   );
 }

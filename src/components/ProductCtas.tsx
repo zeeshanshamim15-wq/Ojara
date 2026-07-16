@@ -60,15 +60,12 @@ export default function ProductCtas({ product }: { product: Product }) {
 
   return (
     <>
-      {/* Trust strip. Was "Get Extra ₹50 Off on Prepaid Payments" — pulled while
-          prepaid is disabled (see PREPAID_ENABLED in CheckoutModal): advertising a
-          discount for a payment method the shopper cannot select is a promise the
-          checkout can't keep. Restore that line when prepaid comes back. */}
-      <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-md px-4 py-3 text-xs font-semibold flex items-center gap-2 mt-6">
-        <span>✦</span>
-        <span>Cash on Delivery available · Free shipping across India</span>
-      </div>
-
+      {/* The COD/free-shipping strip that used to sit here repeated the delivery box
+          directly above it word for word ("Free shipping across India" twice in
+          adjacent rows), which is what made this column read as cramped. Both facts
+          now live in that one box. Nothing about prepaid goes here while it's
+          disabled (see PREPAID_ENABLED in CheckoutModal) — advertising a payment
+          method the shopper cannot select is a promise checkout can't keep. */}
       <div id="main-add-to-bag" className="mt-6">
         <div className="grid grid-cols-2 gap-4">
           <AddToCartButton
