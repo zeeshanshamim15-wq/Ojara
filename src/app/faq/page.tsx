@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { SUPPORT_EMAIL } from "@/lib/commerce/config";
+import BackButton from "@/components/BackButton";
 import FaqAccordion, { type FaqItem } from "@/components/FaqAccordion";
 
 export const metadata: Metadata = {
@@ -51,13 +51,7 @@ export default function FaqPage() {
   return (
     <div className="bg-ivory">
       <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
-        <Link
-          href="/"
-          prefetch
-          className="cursor-pointer inline-block text-xs uppercase tracking-[0.2em] text-midnight-navy/70 transition-all duration-150 ease-out hover:text-midnight-navy active:scale-95"
-        >
-          ← Back to OJARA
-        </Link>
+        <BackButton fallbackHref="/" />
 
         <header className="mt-10 mb-12 text-center">
           <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">

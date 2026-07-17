@@ -1,72 +1,74 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import type { Product } from "@/lib/mockData";
 import { formatPrice } from "@/lib/format";
 import { useCartStore } from "@/lib/store/useCartStore";
 
 /**
- * Scroll-triggered checkout nudge. It watches the main "Add to Bag" button
- * (identified by #main-add-to-bag) and slides a compact bar up from the bottom
- * once that button has scrolled up out of view — keeping the primary action
- * within reach on long product pages, especially on mobile.
+ * Mobile-only checkout bar, modelled on Viora's pinned product bar: a dark
+ * rounded card carrying the product thumbnail, name, price and a bright BUY NOW
+ * button. Shown from the moment the product page opens and pinned there the
+ * whole time (owner call 2026-07-17) so the primary action is always in reach.
  */
 export default function StickyAddToBag({ product }: { product: Product }) {
-  const [visible, setVisible] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
-  const openCart = useCartStore((state) => state.openCart);
+  const openCheckout = useCartStore((state) => state.openCheckout);
+  const cartItems = useCartStore((state) => state.cartItems);
+  const isOutOfStock = product.stockCount === 0;
 
-  useEffect(() => {
-    const target = document.getElementById("main-add-to-bag");
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Only show once the main button has scrolled ABOVE the viewport,
-        // never while it's still below the fold on first load.
-        setVisible(
-          !entry.isIntersecting && entry.boundingClientRect.top < 0,
-        );
-      },
-      { threshold: 0 },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
-
-  const handleAdd = () => {
-    addItem(product);
-    toast.success("✦ Added to your ritual", { description: product.name });
-    openCart();
+  const handleBuyNow = () => {
+    const alreadyInCart = cartItems.some((item) => item.product.id === product.id);
+    if (!alreadyInCart) {
+      addItem(product);
+    }
+    toast.success("✦ Item secured! Proceeding to checkout...", {
+      description: product.name,
+      style: { background: "#10b981", color: "#ffffff", border: "none" },
+    });
+    openCheckout();
   };
 
   return (
     <div
-      aria-hidden={!visible}
-      className={`fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] md:bottom-0 z-40 border-t border-champagne-gold/25 bg-midnight-navy/95 backdrop-blur-sm transition-transform duration-300 ease-out ${
-        visible ? "translate-y-0" : "pointer-events-none translate-y-full"
-      }`}
+      className="fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-40 px-3 md:hidden"
     >
-      {/* pb accounts for bottom nav on mobile viewports */}
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6 md:pb-[calc(1rem+env(safe-area-inset-bottom))] md:pt-4">
-        <div className="min-w-0">
-          <p className="truncate text-sm text-ivory sm:text-base">
-            {product.name}
-          </p>
-          <p className="text-xs text-champagne-gold sm:text-sm">
-            {formatPrice(product.price)}
+      <div className="mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-midnight-navy px-3 py-2.5 shadow-2xl ring-1 ring-champagne-gold/30">
+        {/* Thumbnail */}
+        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg bg-sand">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="44px"
+            className="object-cover"
+          />
+        </div>
+
+        {/* Name + price */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-ivory">{product.name}</p>
+          <p className="flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-champagne-gold">
+              {formatPrice(product.price)}
+            </span>
+            {product.originalPrice && (
+              <span className="text-xs text-ivory/40 line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
           </p>
         </div>
 
+        {/* CTA */}
         <button
           type="button"
-          onClick={handleAdd}
-          className="flex-shrink-0 cursor-pointer rounded-full bg-champagne-gold px-8 py-3.5 text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95 sm:px-10"
+          onClick={handleBuyNow}
+          disabled={isOutOfStock}
+          className="flex-shrink-0 cursor-pointer rounded-xl bg-champagne-gold px-5 py-3 text-xs font-bold uppercase tracking-[0.15em] text-midnight-navy shadow-lg transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-500 disabled:text-gray-300"
         >
-          <span className="md:hidden">Buy Now</span>
-          <span className="hidden md:inline">Add to Bag</span>
+          {isOutOfStock ? "Sold Out" : "Buy Now"}
         </button>
       </div>
     </div>

@@ -31,38 +31,40 @@ export default async function GiftingSection() {
           </p>
         </div>
 
-        {/* Gift sets grid */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
+        {/* Gift sets — both cards side by side on mobile too (owner call
+            2026-07-17), so they're compacted: the description and benefit bullets
+            are hidden on phones, leaving image → name → price → button. */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-10 lg:gap-14">
           {giftSets.map((gift) => (
             <div
               key={gift.id}
-              className="flex flex-col overflow-hidden rounded-2xl border border-champagne-gold/25 bg-midnight-navy/50 p-6 sm:p-8"
+              className="flex flex-col overflow-hidden rounded-2xl border border-champagne-gold/25 bg-midnight-navy/50 p-3 sm:p-8"
             >
               {/* Image box */}
-              <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-sand/10">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-sand/10 sm:aspect-[16/10]">
                 <Image
                   src={gift.image}
                   alt={gift.name}
                   fill
-                  sizes="(max-width: 1024px) 100vw, 500px"
+                  sizes="(max-width: 1024px) 50vw, 500px"
                   className="object-cover transition-transform duration-700 hover:scale-105"
                 />
-                <span className="absolute left-4 top-4 rounded-full bg-champagne-gold px-3.5 py-1 text-[0.65rem] uppercase tracking-[0.15em] text-midnight-navy font-semibold">
-                  ✦ Curated Gift Box
+                <span className="absolute left-2 top-2 rounded-full bg-champagne-gold px-2 py-0.5 text-[0.55rem] uppercase tracking-[0.1em] text-midnight-navy font-semibold sm:left-4 sm:top-4 sm:px-3.5 sm:py-1 sm:text-[0.65rem] sm:tracking-[0.15em]">
+                  ✦ Gift Box
                 </span>
               </div>
 
               {/* Title & price info */}
-              <div className="mt-8 flex-1">
-                <h3 className="font-heading text-xl text-champagne-gold sm:text-2xl">
+              <div className="mt-3 flex-1 sm:mt-8">
+                <h3 className="font-heading text-base leading-snug text-champagne-gold sm:text-2xl">
                   {gift.name}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-ivory/70">
+                {/* Description + benefits: desktop only — too much for a half-width
+                    phone card. */}
+                <p className="mt-3 hidden text-sm leading-relaxed text-ivory/70 sm:block">
                   {gift.tagline}
                 </p>
-
-                {/* Benefits bullets list */}
-                <ul className="mt-6 space-y-2">
+                <ul className="mt-6 hidden space-y-2 sm:block">
                   {gift.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-2 text-xs text-ivory/80">
                       <span className="text-champagne-gold">✦</span>
@@ -72,24 +74,22 @@ export default async function GiftingSection() {
                 </ul>
               </div>
 
-              <div className="mt-8 border-t border-champagne-gold/15 pt-6 flex items-center justify-between">
-                <div>
-                  <span className="flex items-baseline gap-2">
-                    <span className="text-lg text-champagne-gold font-medium">
-                      {formatPrice(gift.price)}
-                    </span>
-                    {gift.originalPrice && (
-                      <span className="text-xs text-ivory/40 line-through">
-                        {formatPrice(gift.originalPrice)}
-                      </span>
-                    )}
+              <div className="mt-3 flex flex-col gap-3 border-t border-champagne-gold/15 pt-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-between sm:pt-6">
+                <span className="flex items-baseline gap-2">
+                  <span className="text-base text-champagne-gold font-semibold sm:text-lg">
+                    {formatPrice(gift.price)}
                   </span>
-                </div>
+                  {gift.originalPrice && (
+                    <span className="text-xs text-ivory/40 line-through">
+                      {formatPrice(gift.originalPrice)}
+                    </span>
+                  )}
+                </span>
 
                 <Link
                   href={`/product/${gift.id}`}
                   prefetch
-                  className="cursor-pointer rounded-full bg-champagne-gold px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95"
+                  className="cursor-pointer whitespace-nowrap rounded-full bg-champagne-gold px-4 py-2.5 text-center text-[0.7rem] font-bold uppercase tracking-[0.15em] text-midnight-navy shadow-sm transition-all duration-150 hover:bg-champagne-gold/85 active:scale-95 sm:px-6 sm:text-xs sm:tracking-[0.2em]"
                 >
                   View Details
                 </Link>

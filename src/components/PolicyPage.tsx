@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { SUPPORT_EMAIL } from "@/lib/commerce/config";
+import BackButton from "@/components/BackButton";
 
 export interface PolicySection {
   heading: string;
@@ -25,13 +25,7 @@ export default function PolicyPage({
   return (
     <div className="bg-ivory">
       <div className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
-        <Link
-          href="/"
-          prefetch
-          className="text-xs uppercase tracking-[0.2em] text-midnight-navy/60 transition-colors duration-300 ease-out hover:text-midnight-navy"
-        >
-          ← Back to OJARA
-        </Link>
+        <BackButton fallbackHref="/" />
 
         <header className="mt-10 border-b border-champagne-gold/25 pb-10">
           <span className="text-xs uppercase tracking-[0.4em] text-champagne-gold">

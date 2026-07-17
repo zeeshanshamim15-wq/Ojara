@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface Message {
   role: "guide" | "user";
@@ -13,11 +14,17 @@ const GREETING: Message = {
 };
 
 export default function EnergyGuideChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [draft, setDraft] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Landing page only. On product pages the floating bubble sat on top of the
+  // sticky Buy Now bar (owner call, 2026-07-17) — keeping it to "/" avoids the
+  // collision and reserves the guide for first-time browsers on the home page.
+  const showChat = pathname === "/";
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -51,6 +58,8 @@ export default function EnergyGuideChat() {
       setIsTyping(false);
     }, 1500);
   };
+
+  if (!showChat) return null;
 
   return (
     // The wrapper is as tall as the *open* panel (~384x532) even while collapsed, so

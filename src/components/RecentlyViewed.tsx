@@ -86,28 +86,29 @@ export default function RecentlyViewed({
           </h2>
         </div>
 
-        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
+        {/* Mobile: horizontal scroll rail of compact cards. Desktop: centred grid. */}
+        <div className="mx-auto flex max-w-4xl snap-x snap-mandatory gap-4 overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 sm:mx-auto sm:grid sm:grid-cols-3 sm:gap-8 sm:overflow-visible sm:px-6">
           {items.map((product) => (
             <Link
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="cursor-pointer group flex flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out md:hover:-translate-y-1 md:hover:shadow-xl md:hover:shadow-champagne-gold/20 active:scale-95"
+              className="cursor-pointer group flex w-[45%] flex-shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-ivory shadow-sm transition-all duration-500 ease-out sm:w-auto md:hover:-translate-y-1 md:hover:shadow-xl md:hover:shadow-champagne-gold/20 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
-                  sizes="(max-width: 640px) 100vw, 33vw"
+                  sizes="(max-width: 640px) 45vw, 33vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
               </div>
-              <div className="flex items-center justify-between p-5">
-                <h3 className="text-sm text-midnight-navy sm:text-base">
+              <div className="flex flex-col gap-0.5 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <h3 className="text-xs text-midnight-navy sm:text-base">
                   {product.name}
                 </h3>
-                <span className="flex-shrink-0 text-sm text-midnight-navy sm:text-base">
+                <span className="flex-shrink-0 text-xs font-medium text-midnight-navy sm:text-base">
                   {formatPrice(product.price)}
                 </span>
               </div>

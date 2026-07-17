@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 export const metadata: Metadata = {
   title: "Our Story | OJARA",
@@ -78,6 +79,12 @@ export default function OurStoryPage() {
             className="object-cover"
           />
           <div className="absolute inset-0 bg-midnight-navy/70" />
+        </div>
+        {/* Back control, over the hero */}
+        <div className="absolute left-0 top-0 z-10 w-full px-6 pt-6">
+          <div className="mx-auto max-w-6xl">
+            <BackButton fallbackHref="/" tone="light" />
+          </div>
         </div>
         <div className="relative mx-auto flex min-h-[60vh] max-w-4xl flex-col items-center justify-center px-6 py-28 text-center">
           <span className="text-xs uppercase tracking-[0.5em] text-champagne-gold">

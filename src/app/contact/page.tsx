@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import ContactForm from "@/components/ContactForm";
 import { SUPPORT_EMAIL } from "@/lib/commerce/config";
+import BackButton from "@/components/BackButton";
 
 export const metadata: Metadata = {
   title: "Contact Us | OJARA",
@@ -18,6 +19,10 @@ const INSTAGRAM_URL = "https://www.instagram.com/ojara.india";
 export default function ContactPage() {
   return (
     <div className="bg-ivory">
+      <div className="mx-auto max-w-6xl px-6 pt-6">
+        <BackButton fallbackHref="/" />
+      </div>
+
       {/* Header */}
       <section className="border-b border-champagne-gold/20 bg-midnight-navy px-6 py-20 text-center sm:py-24">
         <p className="text-[0.65rem] uppercase tracking-[0.4em] text-champagne-gold">

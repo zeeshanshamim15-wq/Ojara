@@ -60,11 +60,13 @@ export default function ManifestationStories() {
           </h2>
         </div>
 
-        <div className="mt-14 gap-6 sm:columns-2 lg:columns-3 [&>*]:mb-6">
+        {/* Mobile: horizontal scroll rail (stacked, these six quotes were a very
+            long scroll). Desktop: staggered masonry via CSS columns. */}
+        <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 sm:mx-0 sm:block sm:columns-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:columns-3 sm:[&>*]:mb-6">
           {stories.map((story) => (
             <figure
               key={story.name}
-              className="break-inside-avoid rounded-2xl border border-champagne-gold/30 bg-sand/40 p-8 transition-all duration-500 ease-out hover:border-champagne-gold/50 hover:bg-sand/70"
+              className="flex w-[78%] flex-shrink-0 snap-start flex-col break-inside-avoid rounded-2xl border border-champagne-gold/30 bg-sand/40 p-6 transition-all duration-500 ease-out hover:border-champagne-gold/50 hover:bg-sand/70 sm:w-auto sm:p-8"
             >
               <span
                 aria-hidden="true"

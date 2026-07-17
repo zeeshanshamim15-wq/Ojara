@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { RAZORPAY_ENABLED } from "@/lib/commerce/config";
 
 interface FooterColumn {
   title: string;
@@ -22,12 +21,11 @@ const socials: { label: string; href: string | null; icon: string }[] = [
   },
 ];
 
-// Badge only what checkout can actually take. The card/UPI/RuPay marks all depend on
-// Razorpay, which is off until its keys are set — until then COD is the only option
-// a shopper can pick, and showing the rest promises a checkout we can't honour (the
-// same reason the prepaid discount line is pulled from ProductCtas). Set the Razorpay
-// keys and these return on their own; nothing here needs editing.
-// (public/paypal.png exists but PayPal is not offered.)
+// Payment badges shown as trust/legitimacy signals in the footer (owner call,
+// 2026-07-17). The card/UPI/RuPay marks are displayed regardless of whether
+// Razorpay is live yet — checkout may still be COD-only until the keys are set,
+// but the logos communicate the methods the store intends to accept.
+// (public/paypal.png exists but PayPal is not offered, so it's never listed.)
 const CASH_ON_DELIVERY = {
   label: "Cash on Delivery",
   src: "/cash-on-delivery.png",
@@ -38,9 +36,10 @@ const PREPAID_METHODS = [
   { label: "UPI", src: "/upi.png" },
   { label: "RuPay", src: "/rupay.png" },
 ];
-const payments: { label: string; src: string }[] = RAZORPAY_ENABLED
-  ? [...PREPAID_METHODS, CASH_ON_DELIVERY]
-  : [CASH_ON_DELIVERY];
+const payments: { label: string; src: string }[] = [
+  ...PREPAID_METHODS,
+  CASH_ON_DELIVERY,
+];
 
 const columns: FooterColumn[] = [
   {
@@ -72,7 +71,7 @@ export default function Footer() {
   return (
     <footer className="mt-auto border-t border-champagne-gold/30 bg-midnight-navy text-champagne-gold">
       <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
           <div className="max-w-xs">
             {/* Brand mark — client gem art (bg removed) — beside the wordmark */}
             <div className="flex items-center gap-3">
@@ -122,26 +121,30 @@ export default function Footer() {
             </div>
           </div>
 
-          {columns.map((column) => (
-            <nav key={column.title} aria-label={column.title}>
-              <p className="text-xs uppercase tracking-[0.3em] text-champagne-gold/90">
-                {column.title}
-              </p>
-              <ul className="mt-5 flex flex-col gap-3 text-sm tracking-[0.15em] text-champagne-gold/95">
-                {column.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      prefetch
-                      className="cursor-pointer transition-all duration-150 ease-out hover:text-ivory active:scale-95"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ))}
+          {/* The three link columns sit side by side even on mobile — stacking
+              them vertically turned the footer into a long scroll. */}
+          <div className="grid grid-cols-3 gap-4 sm:gap-10 lg:gap-16">
+            {columns.map((column) => (
+              <nav key={column.title} aria-label={column.title}>
+                <p className="text-[0.6rem] uppercase tracking-[0.2em] text-champagne-gold/90 sm:text-xs sm:tracking-[0.3em]">
+                  {column.title}
+                </p>
+                <ul className="mt-4 flex flex-col gap-2.5 text-[0.8rem] tracking-[0.05em] text-champagne-gold/95 sm:mt-5 sm:gap-3 sm:text-sm sm:tracking-[0.15em]">
+                  {column.links.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        prefetch
+                        className="cursor-pointer transition-all duration-150 ease-out hover:text-ivory active:scale-95"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </div>
         </div>
 
         <div className="mt-14 flex flex-col-reverse items-center gap-6 border-t border-champagne-gold/30 pt-6 sm:flex-row sm:justify-between">

@@ -57,18 +57,21 @@ const values: ValueProp[] = [
 
 export default function ValueProps() {
   return (
-    <section className="border-y border-champagne-gold/30 bg-sand px-6 py-16 sm:py-24">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-champagne-gold/30 bg-champagne-gold/30 sm:grid-cols-3">
+    <section className="border-y border-champagne-gold/30 bg-sand px-6 py-12 sm:py-24">
+      {/* Mobile: a compact horizontal scroll rail — stacked vertically these three
+          cards turned into a very long scroll. Desktop: the framed 3-up grid with
+          hairline dividers (gap-px over a gold background). */}
+      <div className="mx-auto flex max-w-6xl snap-x snap-mandatory gap-4 overflow-x-auto hide-scrollbar -mx-6 px-6 sm:mx-auto sm:grid sm:grid-cols-3 sm:gap-px sm:overflow-hidden sm:rounded-2xl sm:border sm:border-champagne-gold/30 sm:bg-champagne-gold/30 sm:px-0">
         {values.map((value) => (
           <div
             key={value.title}
-            className="flex flex-col items-center bg-ivory px-8 py-16 text-center"
+            className="flex w-[70%] flex-shrink-0 snap-start flex-col items-center rounded-2xl border border-champagne-gold/30 bg-ivory px-6 py-8 text-center sm:w-auto sm:rounded-none sm:border-0 sm:px-8 sm:py-16"
           >
             <span className="text-champagne-gold">{value.icon}</span>
-            <h3 className="mt-8 text-lg uppercase tracking-[0.2em] text-midnight-navy">
+            <h3 className="mt-5 text-base uppercase tracking-[0.15em] text-midnight-navy sm:mt-8 sm:text-lg sm:tracking-[0.2em]">
               {value.title}
             </h3>
-            <p className="mt-4 max-w-xs text-sm leading-7 text-midnight-navy/70">
+            <p className="mt-3 max-w-xs text-sm leading-6 text-midnight-navy/70 sm:mt-4 sm:leading-7">
               {value.description}
             </p>
           </div>

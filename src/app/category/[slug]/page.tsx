@@ -5,6 +5,7 @@ import { categories } from "@/lib/mockData";
 import { getCategoryBySlug, getProductsByCategory } from "@/lib/catalog";
 import ProductCard from "@/components/ProductCard";
 import ValueProps from "@/components/ValueProps";
+import BackButton from "@/components/BackButton";
 
 // Prerender a static page for every intention and every product type.
 export function generateStaticParams() {
@@ -44,11 +45,15 @@ export default async function CategoryPage({
 
   return (
     <div className="bg-ivory">
-      {/* Breadcrumb trail */}
+      {/* Breadcrumb trail + back control */}
       <nav
         aria-label="Breadcrumb"
-        className="mx-auto max-w-6xl px-6 py-8 sm:py-10"
+        className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-6 py-6 sm:py-8"
       >
+        <BackButton fallbackHref="/#collection" className="shrink-0" />
+        <span aria-hidden="true" className="hidden text-champagne-gold/50 sm:inline">
+          |
+        </span>
         <ol className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-midnight-navy/50">
           <li>
             <Link

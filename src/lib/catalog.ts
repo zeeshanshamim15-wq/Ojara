@@ -25,7 +25,11 @@ type WixRawProduct = {
   media?: { mainMedia?: WixMediaItem; items?: WixMediaItem[] };
   priceData?: { price?: number; discountedPrice?: number; originalPrice?: number };
   price?: { price?: number; discountedPrice?: number; originalPrice?: number };
+  // Wix reports stock two ways depending on whether inventory tracking is on:
+  // a numeric `quantity`, and/or an `inStock` flag + `inventoryStatus` string.
+  // We read all of them so an out-of-stock in the Wix dashboard always wins.
   inventory?: { quantity?: number };
+  stock?: { inStock?: boolean; quantity?: number; inventoryStatus?: string };
 };
 type WixRawCollection = {
   id: string;
@@ -37,6 +41,29 @@ type WixRawCollection = {
 };
 // Product plus the Wix-only field we attach during mapping.
 type ProductWithCollections = Product & { collectionIds?: string[] };
+
+// Resolve a product's stock from Wix into a single number our UI reads, where
+// 0 means out of stock (disables the CTAs). Priority:
+//   1. An explicit out-of-stock signal (inStock === false or inventoryStatus
+//      OUT_OF_STOCK) always wins — this is what the owner toggles in the Wix
+//      dashboard and it must show through even if a stale quantity lingers.
+//   2. A tracked numeric quantity (stock.quantity or inventory.quantity).
+//   3. inStock === true with no tracked quantity → treat as available.
+//   4. No Wix signal at all → the mock twin's count, else a small default.
+function resolveStock(
+  p: WixRawProduct,
+  mockP: Product | undefined,
+): number {
+  const stock = p.stock;
+  const qty = stock?.quantity ?? p.inventory?.quantity;
+
+  if (stock?.inStock === false || stock?.inventoryStatus === "OUT_OF_STOCK") {
+    return 0;
+  }
+  if (typeof qty === "number") return qty;
+  if (stock?.inStock === true || stock?.inventoryStatus === "IN_STOCK") return 10;
+  return mockP ? mockP.stockCount : 10;
+}
 
 // Convert a Wix product to our Product interface
 function mapWixProduct(p: WixRawProduct): Product {
@@ -115,7 +142,7 @@ function mapWixProduct(p: WixRawProduct): Product {
     type: mockP ? mockP.type : undefined,
     image: imageUrl,
     images,
-    stockCount: p.inventory?.quantity ?? (mockP ? mockP.stockCount : 10),
+    stockCount: resolveStock(p, mockP),
     isBundle: mockP ? mockP.isBundle : false,
     wixCatalogItemId: p.id,
     // Wix-only; carried so getProductsByCategory can filter by collection.

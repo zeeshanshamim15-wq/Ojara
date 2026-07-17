@@ -31,31 +31,32 @@ export default async function YouMayAlsoLike({ currentId }: { currentId: string 
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 sm:gap-8 lg:grid-cols-4">
+        {/* Mobile: horizontal scroll rail of compact cards. Desktop: 4-up grid. */}
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto hide-scrollbar -mx-6 px-6 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-8 sm:overflow-visible sm:px-0 lg:grid-cols-4">
           {suggestions.map((product) => (
             <Link
               key={product.id}
               href={`/product/${product.id}`}
               prefetch
-              className="cursor-pointer group flex flex-col transition-all duration-150 md:hover:-translate-y-1 active:scale-95"
+              className="cursor-pointer group flex w-[42%] flex-shrink-0 snap-start flex-col transition-all duration-150 sm:w-auto md:hover:-translate-y-1 active:scale-95"
             >
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-sand shadow-sm transition-all duration-500 ease-out md:group-hover:shadow-xl md:group-hover:shadow-champagne-gold/20">
                 <Image
                   src={product.image}
                   alt={product.name}
                   fill
-                  sizes="(max-width: 640px) 50vw, 25vw"
+                  sizes="(max-width: 640px) 42vw, 25vw"
                   className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
               </div>
-              <div className="mt-4">
-                <p className="text-[0.65rem] uppercase tracking-[0.25em] text-champagne-gold">
+              <div className="mt-3 sm:mt-4">
+                <p className="text-[0.6rem] uppercase tracking-[0.2em] text-champagne-gold sm:text-[0.65rem] sm:tracking-[0.25em]">
                   {product.intention}
                 </p>
-                <h3 className="mt-2 text-sm text-midnight-navy sm:text-base">
+                <h3 className="mt-1.5 text-xs text-midnight-navy sm:mt-2 sm:text-base">
                   {product.name}
                 </h3>
-                <p className="mt-1 text-sm text-midnight-navy/85">
+                <p className="mt-1 text-xs font-medium text-midnight-navy/85 sm:text-sm">
                   {formatPrice(product.price)}
                 </p>
               </div>

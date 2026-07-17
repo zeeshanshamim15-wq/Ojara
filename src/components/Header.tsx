@@ -72,18 +72,20 @@ export default function Header() {
             <Link
               href="/"
               prefetch
-              className="flex items-center gap-3 group cursor-pointer transition-all duration-150 active:scale-95"
+              className="flex items-center gap-2 sm:gap-3 group cursor-pointer transition-all duration-150 active:scale-95"
             >
-              {/* Brand mark — client gem art (bg removed) — beside the wordmark */}
+              {/* Brand mark — client gem art (bg removed) — beside the wordmark.
+                  Deliberately smaller on mobile: at 40px it dominated the phone
+                  header. h-7 on mobile, h-10 from sm up. */}
               <Image
                 alt="Ojara"
-                className="object-contain transition-transform duration-500 group-hover:scale-105"
+                className="h-7 w-auto object-contain transition-transform duration-500 group-hover:scale-105 sm:h-10"
                 height={40}
                 width={36}
                 priority
                 src="/logo.png"
               />
-              <span className="font-heading text-2xl uppercase tracking-[0.3em] text-champagne-gold">
+              <span className="font-heading text-lg uppercase tracking-[0.25em] text-champagne-gold sm:text-2xl sm:tracking-[0.3em]">
                 OJARA
               </span>
             </Link>

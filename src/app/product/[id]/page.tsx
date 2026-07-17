@@ -13,6 +13,9 @@ import ProductGallery from "@/components/ProductGallery";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
 import ProductCtas from "@/components/ProductCtas";
+import StickyAddToBag from "@/components/StickyAddToBag";
+import BackButton from "@/components/BackButton";
+import { RAZORPAY_ENABLED } from "@/lib/commerce/config";
 
 // The four objections an Indian shopper brings to a crystal purchase: is the
 // stone real, can I pay cash on delivery, has it been energized, and will it sit
@@ -122,11 +125,15 @@ export default async function ProductDetailPage({
       {/* Record this visit in the persisted browsing history */}
       <TrackRecentlyViewed productId={product.id} />
 
-      {/* Breadcrumb trail */}
+      {/* Breadcrumb trail + back control */}
       <nav
         aria-label="Breadcrumb"
-        className="mx-auto max-w-6xl px-6 py-8 sm:py-10"
+        className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-6 py-6 sm:py-8"
       >
+        <BackButton fallbackHref="/#collection" className="shrink-0" />
+        <span aria-hidden="true" className="hidden text-champagne-gold/50 sm:inline">
+          |
+        </span>
         <ol className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-midnight-navy/50">
           <li>
             <Link
@@ -201,50 +208,54 @@ export default async function ProductDetailPage({
             )}
           </h1>
 
-          {/* Price is the second thing the eye should land on after the name, so it
-              gets its own row and outweighs the body copy around it. */}
-          <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-2">
-            <p className="text-4xl font-bold tracking-tight text-midnight-navy sm:text-5xl">
+          {/* Price highlight — golden price on the normal ivory ground (owner call
+              2026-07-17: no navy chip). Extra top margin gives it room to breathe
+              below the name instead of sitting glued to it. */}
+          <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-2 sm:mt-8">
+            <span className="text-3xl font-semibold tracking-tight text-champagne-gold sm:text-4xl">
               {formatPrice(product.price)}
-            </p>
+            </span>
             {product.originalPrice && (
-              <>
-                <p className="text-lg text-midnight-navy/40 line-through">
-                  {formatPrice(product.originalPrice)}
-                </p>
-                <span className="rounded border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                  Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                </span>
-              </>
+              <span className="text-lg text-midnight-navy/40 line-through">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
+            {product.originalPrice && (
+              <span className="rounded-md bg-emerald-100 px-2.5 py-1.5 text-sm font-bold text-emerald-700">
+                Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+              </span>
             )}
           </div>
 
-          {/* Minimal Trust Badges */}
-          <div className="mt-4 flex flex-wrap items-center gap-4 text-xs font-semibold tracking-wider text-midnight-navy/85 uppercase">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="text-champagne-gold text-sm">💎</span>
-              Certified Natural
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="text-champagne-gold text-sm">✨</span>
-              Cleansed &amp; Energized
-            </span>
-          </div>
+          {/* Prepaid incentive — Viora's green "Extra ₹50 off" strip. Gated behind
+              RAZORPAY_ENABLED so it only advertises a payment method checkout can
+              actually take. Appears on its own the moment prepaid is switched on. */}
+          {RAZORPAY_ENABLED && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+              <span aria-hidden="true">🎉</span>
+              Get Extra ₹50 Off on Prepaid Payments
+            </div>
+          )}
 
-          {/* The reason to buy, scannable in five seconds */}
-          <ul className="mt-8 space-y-3">
-            {product.benefits.map((benefit) => (
+          {/* Primary action — quantity selector + Add to Cart / Buy Now.
+              The Certified Natural / Cleansed & Energized badges that sat here were
+              removed (owner call 2026-07-17) — the same reassurance lives in the
+              trust-badge grid below the CTA, and the empty space keeps the buy zone
+              calm and Viora-like. */}
+          <ProductCtas product={product} />
+
+          {/* Risk-reversal trust badges sit directly under the CTA (Viora order),
+              then the delivery promise. */}
+          <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-midnight-navy/70">
+            {trustBadges.map((badge) => (
               <li
-                key={benefit}
-                className="flex items-start gap-3 text-sm leading-6 text-midnight-navy/85"
+                key={badge.label}
+                className="inline-flex items-center gap-2 text-[0.7rem] tracking-wide sm:text-xs"
               >
-                <span
-                  aria-hidden="true"
-                  className="mt-0.5 flex-shrink-0 text-champagne-gold"
-                >
-                  ✦
+                <span className="flex-shrink-0 text-champagne-gold">
+                  {badge.icon}
                 </span>
-                <span>{benefit}</span>
+                <span>{badge.label}</span>
               </li>
             ))}
           </ul>
@@ -252,7 +263,7 @@ export default async function ProductDetailPage({
           {/* Delivery promise. Replaces the pincode estimator: it quoted a
               per-pincode ETA we can't actually honour, so we state the real
               dispatch window instead. */}
-          <div className="mt-6 flex items-center gap-3 rounded-xl border border-champagne-gold/25 bg-sand/40 px-4 py-3">
+          <div className="mt-5 flex items-center gap-3 rounded-xl border border-champagne-gold/25 bg-sand/40 px-4 py-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="18"
@@ -277,7 +288,24 @@ export default async function ProductDetailPage({
             </p>
           </div>
 
-          <ProductCtas product={product} />
+          {/* The reason to buy, scannable in five seconds. Moved below the buy zone
+              so it informs without crowding the price/CTA. */}
+          <ul className="mt-8 space-y-3">
+            {product.benefits.map((benefit) => (
+              <li
+                key={benefit}
+                className="flex items-start gap-3 text-sm leading-6 text-midnight-navy/85"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 flex-shrink-0 text-champagne-gold"
+                >
+                  ✦
+                </span>
+                <span>{benefit}</span>
+              </li>
+            ))}
+          </ul>
 
           {/* Intention — reinforces the brand story */}
           <div className="mt-8 rounded-2xl border border-champagne-gold/30 bg-sand/50 p-6">
@@ -298,23 +326,11 @@ export default async function ProductDetailPage({
 
           {/* Reviews — honest empty state + star/photo submission form */}
           <ProductReviews productId={product.id} productName={product.name} />
-
-          {/* Risk reversal — trust badges tuned to the Indian shopper */}
-          <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-midnight-navy/70 sm:grid-cols-2">
-            {trustBadges.map((badge) => (
-              <li
-                key={badge.label}
-                className="inline-flex items-center gap-2 text-xs tracking-wide sm:text-sm"
-              >
-                <span className="flex-shrink-0 text-champagne-gold">
-                  {badge.icon}
-                </span>
-                <span>✦ {badge.label}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
+
+      {/* Mobile-only Viora-style sticky Buy Now bar */}
+      <StickyAddToBag product={product} />
 
       {/* Item-specific FAQ — answers the last objections before checkout */}
       <ProductFaq product={product} />
