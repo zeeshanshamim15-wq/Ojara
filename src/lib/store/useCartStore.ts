@@ -36,6 +36,11 @@ interface CartState {
   isAuthOpen: boolean;
   // Product IDs, most-recent first. Powers the "Recently Viewed" rails.
   recentlyViewed: string[];
+  // Coupon + gift-wrap live on the store so they survive the cart → checkout
+  // hand-off (the checkout modal reads them) and a page refresh.
+  appliedCoupon: string;
+  giftWrap: boolean;
+  giftNote: string;
   addItem: (product: Product) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
@@ -47,6 +52,9 @@ interface CartState {
   openAuth: () => void;
   closeAuth: () => void;
   addRecentlyViewed: (productId: string) => void;
+  setAppliedCoupon: (code: string) => void;
+  setGiftWrap: (on: boolean) => void;
+  setGiftNote: (note: string) => void;
 }
 
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -92,6 +100,9 @@ export const useCartStore = create<CartState>()(
       isCheckoutOpen: false,
       isAuthOpen: false,
       recentlyViewed: [],
+      appliedCoupon: "",
+      giftWrap: false,
+      giftNote: "",
 
       addItem: (product) =>
         set((state) => {
@@ -136,7 +147,9 @@ export const useCartStore = create<CartState>()(
 
       clearCart: () => {
         syncWixCart([]);
-        set({ cartItems: [] });
+        // A cleared cart drops its coupon + gift-wrap too — they don't belong to
+        // the next, empty order.
+        set({ cartItems: [], appliedCoupon: "", giftWrap: false, giftNote: "" });
       },
 
       openCart: () => set({ isCartOpen: true }),
@@ -157,6 +170,10 @@ export const useCartStore = create<CartState>()(
             ...state.recentlyViewed.filter((id) => id !== productId),
           ].slice(0, RECENTLY_VIEWED_LIMIT),
         })),
+
+      setAppliedCoupon: (code) => set({ appliedCoupon: code }),
+      setGiftWrap: (on) => set({ giftWrap: on }),
+      setGiftNote: (note) => set({ giftNote: note }),
     }),
     {
       name: "ojara-cart",
@@ -166,6 +183,9 @@ export const useCartStore = create<CartState>()(
       partialize: (state) => ({
         cartItems: state.cartItems,
         recentlyViewed: state.recentlyViewed,
+        appliedCoupon: state.appliedCoupon,
+        giftWrap: state.giftWrap,
+        giftNote: state.giftNote,
       }),
     },
   ),

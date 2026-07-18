@@ -38,10 +38,13 @@ export const EMAIL_ENABLED = !!(
  *
  * Order confirmations went out with "Visit OJARA" and the footer both pointing at
  * localhost:3000 — dead links in a real customer's inbox. So a localhost value is
- * treated as unset whenever we're running on Vercel, where the platform always
- * supplies the real production host itself. NEXT_PUBLIC_SITE_URL still wins for a
- * custom domain; it just can't drag production back to localhost.
+ * treated as unset whenever we're running on Vercel. In production we point at the
+ * connected custom domain (ojara.co.in) rather than the raw *.vercel.app host, so
+ * customer-facing links carry the real brand. NEXT_PUBLIC_SITE_URL still wins for
+ * an explicit override; it just can't drag production back to localhost.
  */
+const PRODUCTION_SITE_URL = "https://www.ojara.co.in";
+
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 const configuredIsLocal =
@@ -49,7 +52,7 @@ const configuredIsLocal =
 
 export const SITE_URL = (
   (configuredSiteUrl && !(vercelHost && configuredIsLocal) ? configuredSiteUrl : "") ||
-  (vercelHost ? `https://${vercelHost}` : "") ||
+  (vercelHost ? PRODUCTION_SITE_URL : "") ||
   "http://localhost:3000"
 ).replace(/\/$/, "");
 

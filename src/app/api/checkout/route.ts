@@ -129,6 +129,12 @@ export async function POST(req: Request) {
     const razorpayPaymentId = normalizeText(details?.razorpayPaymentId);
     const razorpayAmount = normalizeText(details?.razorpayAmount);
 
+    // Gift wrap + note and the coupon code ride along so the owner sees them on
+    // the Wix order (gift wrap is otherwise invisible server-side).
+    const giftWrap = body?.giftWrap === true;
+    const giftNote = normalizeText(body?.giftNote);
+    const couponCode = normalizeText(body?.couponCode).toUpperCase();
+
     if (!email || !fullName || !phone || !addressLine1 || !city || !state || !postalCode) {
       return NextResponse.json(
         { error: "Missing checkout contact or shipping details." },
@@ -199,11 +205,13 @@ export async function POST(req: Request) {
       },
       buyerInfo: { email },
       buyerNote:
-        paymentMethod === "COD"
+        (paymentMethod === "COD"
           ? `Payment: Cash on Delivery (COD). Phone: ${phone}. Pincode: ${postalCode}.`
           : `Payment: Prepaid. Phone: ${phone}. Pincode: ${postalCode}.` +
             (razorpayPaymentId ? ` Razorpay Payment ID: ${razorpayPaymentId}.` : "") +
-            (razorpayAmount ? ` Amount paid: ${razorpayAmount}.` : ""),
+            (razorpayAmount ? ` Amount paid: ${razorpayAmount}.` : "")) +
+        (giftWrap ? ` ✦ GIFT WRAP (+₹149).` : "") +
+        (giftWrap && giftNote ? ` Note: "${giftNote}".` : ""),
       customFields: [
         {
           title: "Payment Method",
@@ -214,6 +222,9 @@ export async function POST(req: Request) {
           ? [{ title: "Razorpay Payment ID", value: razorpayPaymentId }]
           : []),
         ...(razorpayAmount ? [{ title: "Amount Paid", value: razorpayAmount }] : []),
+        ...(couponCode ? [{ title: "Coupon", value: couponCode }] : []),
+        ...(giftWrap ? [{ title: "Gift Wrap", value: "Yes (+₹149)" }] : []),
+        ...(giftWrap && giftNote ? [{ title: "Gift Note", value: giftNote }] : []),
       ],
     });
 

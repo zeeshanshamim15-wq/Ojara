@@ -43,24 +43,23 @@ export interface CouponTier {
   label: string;
 }
 
-// Example tiers. These MUST mirror the coupons the owner creates in the Wix
-// dashboard (Phase 2). Codes are matched case-insensitively.
+// These MUST mirror the coupons the owner has created in the Wix dashboard.
+// Codes are matched case-insensitively. When live, Wix validates authoritatively;
+// this mirror only drives the "add ₹X to unlock" nudge + the pre-apply preview.
+//
+// OJAS10 — created in Wix on 2026-07-18: 10% off, minimum order subtotal ₹1499.
 export const COUPON_TIERS: CouponTier[] = [
   {
-    code: "WELCOME50",
-    type: "FLAT",
-    minimum: 700,
-    value: 50,
-    label: "₹50 off orders over ₹700",
-  },
-  {
-    code: "OJARA10",
+    code: "OJAS10",
     type: "PERCENT",
-    minimum: 999,
+    minimum: 1499,
     value: 0.1,
-    label: "10% off orders over ₹999",
+    label: "10% off orders over ₹1499",
   },
 ];
+
+/** The coupon the storefront actively promotes (banner + cart unlock nudge). */
+export const PRIMARY_COUPON = COUPON_TIERS[0];
 
 export interface PricedLine {
   price: number;
@@ -110,12 +109,16 @@ export interface TotalsInput {
   wixReportedDiscount?: number;
   /** Coupon code currently on the cart, if any (used by the mirror fallback). */
   appliedCouponCode?: string;
+  /** Optional gift-wrap charge (₹). A real charge — added on top of the total. */
+  giftWrapFee?: number;
 }
 
 export interface Totals {
   subtotal: number;
   couponDiscount: number;
   prepaidDiscount: number;
+  /** Gift-wrap charge folded into the total (0 when not selected). */
+  giftWrapFee: number;
   /** The real amount charged. Never negative. */
   total: number;
   /** Optics only — inflated subtotal so shipping/processing can be struck off. */
@@ -132,6 +135,7 @@ export const computeTotals = ({
   isPrepaid,
   wixReportedDiscount,
   appliedCouponCode,
+  giftWrapFee = 0,
 }: TotalsInput): Totals => {
   const subtotal = cartSubtotal(lines);
 
@@ -144,12 +148,15 @@ export const computeTotals = ({
   }
 
   const prepaidDiscount = isPrepaid ? PREPAID_DISCOUNT : 0;
-  const total = Math.max(0, subtotal - couponDiscount - prepaidDiscount);
+  const wrap = Math.max(0, giftWrapFee);
+  const total =
+    Math.max(0, subtotal - couponDiscount - prepaidDiscount) + wrap;
 
   return {
     subtotal,
     couponDiscount,
     prepaidDiscount,
+    giftWrapFee: wrap,
     total,
     // *** DISPLAY ONLY — never send to a gateway / order / email. ***
     displaySubtotal: subtotal + SHIPPING_FEE_DISPLAY + PROCESSING_FEE_DISPLAY,

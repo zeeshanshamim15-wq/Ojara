@@ -10,6 +10,7 @@ import ProductReviews from "@/components/ProductReviews";
 import ProductFaq from "@/components/ProductFaq";
 import YouMayAlsoLike from "@/components/YouMayAlsoLike";
 import ProductGallery from "@/components/ProductGallery";
+import ShareButton from "@/components/ShareButton";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
 import ProductCtas from "@/components/ProductCtas";
@@ -128,7 +129,7 @@ export default async function ProductDetailPage({
       {/* Breadcrumb trail + back control */}
       <nav
         aria-label="Breadcrumb"
-        className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-6 py-6 sm:py-8"
+        className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-6 py-3 sm:py-4"
       >
         <BackButton fallbackHref="/#collection" className="shrink-0" />
         <span aria-hidden="true" className="hidden text-champagne-gold/50 sm:inline">
@@ -199,14 +200,17 @@ export default async function ProductDetailPage({
 
         {/* RIGHT — the tall column that scrolls past the pinned image */}
         <div className="w-full lg:w-[45%] flex flex-col">
-          <h1 className="text-4xl text-midnight-navy sm:text-5xl">
-            {product.name}
-            {product.isBundle && (
-              <span className="ml-3 inline-block rounded-full bg-champagne-gold/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] text-champagne-gold align-middle">
-                ✦ Curated Harmony Set
-              </span>
-            )}
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-4xl text-midnight-navy sm:text-5xl">
+              {product.name}
+              {product.isBundle && (
+                <span className="ml-3 inline-block rounded-full bg-champagne-gold/20 px-3 py-1 text-[0.65rem] uppercase tracking-[0.2em] text-champagne-gold align-middle">
+                  ✦ Curated Harmony Set
+                </span>
+              )}
+            </h1>
+            <ShareButton productName={product.name} className="mt-1 shrink-0" />
+          </div>
 
           {/* Price highlight — golden price on the normal ivory ground (owner call
               2026-07-17: no navy chip). Extra top margin gives it room to breathe

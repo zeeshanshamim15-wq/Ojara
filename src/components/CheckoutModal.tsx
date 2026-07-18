@@ -13,6 +13,7 @@ import {
   PREPAID_DISCOUNT,
 } from "@/lib/commerce/pricing";
 import { WIX_ENABLED, BRAND_NAME } from "@/lib/commerce/config";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 type PaymentMethod = "PREPAID" | "COD";
 
@@ -77,6 +78,12 @@ export default function CheckoutModal() {
   const clearCart = useCartStore((s) => s.clearCart);
   const open = useCartStore((s) => s.isCheckoutOpen);
   const onClose = useCartStore((s) => s.closeCheckout);
+  // Coupon + gift-wrap come from the cart (set in the drawer); the checkout is a
+  // read-through so the shopper sees the same numbers they saw in the cart.
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
+  const setAppliedCoupon = useCartStore((s) => s.setAppliedCoupon);
+  const giftWrap = useCartStore((s) => s.giftWrap);
+  const giftNote = useCartStore((s) => s.giftNote);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
@@ -93,10 +100,13 @@ export default function CheckoutModal() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
 
-  // Coupon
+  // Coupon — the applied code lives on the cart store; only the input box and its
+  // error are local to this modal.
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState("");
   const [couponError, setCouponError] = useState("");
+
+  const GIFT_WRAP_FEE = 149;
+  const giftWrapFee = giftWrap ? GIFT_WRAP_FEE : 0;
 
   // Normalised cart lines — the seam. Today from the local store; when the Wix
   // cart takes over (Phase 2) this maps the Wix lineItems to the same shape.
@@ -120,24 +130,22 @@ export default function CheckoutModal() {
         lines,
         isPrepaid,
         appliedCouponCode: appliedCoupon || undefined,
+        giftWrapFee,
       }),
-    [lines, isPrepaid, appliedCoupon],
+    [lines, isPrepaid, appliedCoupon, giftWrapFee],
   );
 
-  // Reset transient UI whenever the modal opens; lock body scroll while open.
+  // Lock scroll (Lenis-aware) while open, and close on Escape.
   useEffect(() => {
-    if (!open) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
+    if (!open) return;
+    lockScroll();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [open, onClose]);
 
@@ -195,9 +203,13 @@ export default function CheckoutModal() {
         subtotal: String(totals.subtotal),
         shipping: "0",
         discount: String(totals.couponDiscount + totals.prepaidDiscount),
+        giftWrap: giftWrapFee ? String(giftWrapFee) : undefined,
         total: String(totals.total),
       },
       amount: totals.total.toFixed(2),
+      couponCode: appliedCoupon || undefined,
+      giftWrap,
+      giftNote: giftWrap ? giftNote.trim() || undefined : undefined,
       stateName,
     };
   };
@@ -228,6 +240,16 @@ export default function CheckoutModal() {
         await wc.currentCart.deleteCurrentCart().catch(() => {});
         await wc.currentCart.addToCurrentCart({ lineItems });
       }
+      // Apply the coupon natively so Wix's engine computes the discount and it
+      // shows on the resulting order. Best-effort: if Wix rejects the code, the
+      // order still proceeds (the local mirror already reflected the discount).
+      if (appliedCoupon) {
+        try {
+          await wc.currentCart.updateCurrentCart({ couponCode: appliedCoupon });
+        } catch (couponErr) {
+          console.error("Wix rejected coupon", appliedCoupon, couponErr);
+        }
+      }
       const checkoutResult = await wc.currentCart.createCheckoutFromCurrentCart({
         channelType: "WEB",
       });
@@ -256,6 +278,9 @@ export default function CheckoutModal() {
         items: payload.items,
         summary: payload.summary,
         amount: payload.amount,
+        couponCode: payload.couponCode,
+        giftWrap: payload.giftWrap,
+        giftNote: payload.giftNote,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -563,6 +588,9 @@ export default function CheckoutModal() {
                 )}
                 {totals.prepaidDiscount > 0 && (
                   <Row label="Online payment discount" value={`− ${formatPrice(totals.prepaidDiscount)}`} valueClass="text-champagne-gold font-semibold" />
+                )}
+                {totals.giftWrapFee > 0 && (
+                  <Row label="Gift wrap & note" value={`+ ${formatPrice(totals.giftWrapFee)}`} />
                 )}
                 <div className="mt-2 flex items-center justify-between border-t border-midnight-navy/15 pt-2">
                   <span className="text-xs font-bold uppercase tracking-[0.15em] text-midnight-navy/80">To pay</span>

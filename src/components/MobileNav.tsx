@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import type { Category } from "@/lib/catalog";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 // The mega menu's counterpart below the md breakpoint. Modelled on Viora's
 // slide-in drawer: primary destinations up top with icons, the full collection
@@ -58,11 +59,10 @@ export default function MobileNav() {
       if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockScroll();
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlockScroll();
     };
   }, [open]);
 

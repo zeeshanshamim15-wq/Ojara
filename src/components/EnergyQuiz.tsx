@@ -5,6 +5,7 @@ import Image from "next/image";
 import { getProductById, type Product } from "@/lib/mockData";
 import { formatPrice } from "@/lib/format";
 import AddToCartButton from "@/components/AddToCartButton";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 type Intention = "Wealth" | "Protection" | "Vitality" | "Focus";
 
@@ -43,10 +44,10 @@ export default function EnergyQuiz({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [open, onClose]);
 
@@ -77,7 +78,7 @@ export default function EnergyQuiz({
         aria-modal="true"
         aria-label="Find Your Bracelet quiz"
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-lg overflow-hidden rounded-3xl bg-ivory shadow-2xl transition-all duration-500 ease-out ${
+        className={`relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-ivory shadow-2xl transition-all duration-500 ease-out ${
           open ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"
         }`}
       >
@@ -103,6 +104,10 @@ export default function EnergyQuiz({
           </svg>
         </button>
 
+        {/* Scrollable body — caps at the dialog height so tall result content can
+            scroll instead of overflowing off the top/bottom of the viewport. The
+            close button above stays pinned outside this scroll area. */}
+        <div className="overflow-y-auto">
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 pt-8">
           {[1, 2].map((s) => (
@@ -190,6 +195,7 @@ export default function EnergyQuiz({
               </button>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

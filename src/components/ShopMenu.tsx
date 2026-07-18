@@ -12,7 +12,12 @@ const CLOSE_DELAY_MS = 120;
 export default function ShopMenu() {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  // Horizontal nudge (px) applied on top of the centred position so the panel
+  // stays fully on-screen on narrow windows. 0 on wide screens, so the layout is
+  // identical to the original centred-under-SHOP look there.
+  const [shiftX, setShiftX] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelClose = () => {
@@ -63,6 +68,40 @@ export default function ShopMenu() {
     };
   }, [open]);
 
+  // Keep the centred panel on-screen. Measure it as if perfectly centred, then
+  // nudge it right/left only by however much it would spill past a viewport edge.
+  // On wide windows there's no spill, so shiftX stays 0 and the panel sits exactly
+  // where it always did (centred under SHOP).
+  useEffect(() => {
+    if (!open) return;
+
+    const clamp = () => {
+      const wrapper = wrapperRef.current;
+      const panel = panelRef.current;
+      if (!wrapper || !panel) return;
+      // Derive the natural centred position from the trigger's centre and the
+      // panel's own width — both independent of the transform we're applying, so
+      // there's no feedback loop or stale-value drift on resize.
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const centreX = wrapperRect.left + wrapperRect.width / 2;
+      const halfPanel = panel.offsetWidth / 2;
+      const naturalLeft = centreX - halfPanel;
+      const naturalRight = centreX + halfPanel;
+      const margin = 12;
+      let next = 0;
+      if (naturalLeft < margin) next = margin - naturalLeft;
+      else if (naturalRight > window.innerWidth - margin)
+        next = window.innerWidth - margin - naturalRight;
+      setShiftX(next);
+    };
+
+    clamp();
+    window.addEventListener("resize", clamp);
+    return () => window.removeEventListener("resize", clamp);
+    // categories affects the panel's width once loaded; re-clamp then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, categories]);
+
   return (
     <div
       ref={wrapperRef}
@@ -104,12 +143,17 @@ export default function ShopMenu() {
         </svg>
       </button>
 
-      {/* Panel. Anchored to the trigger on desktop; full-width sheet on mobile. */}
+      {/* Panel. Centred under the trigger, then nudged by shiftX only if it would
+          otherwise run off a narrow viewport's edge. */}
       <div
-        className={`absolute left-1/2 top-full z-[100] w-[320px] -translate-x-1/2 pt-4 transition-all duration-300 ease-out ${
-          open
-            ? "visible translate-y-0 opacity-100"
-            : "invisible -translate-y-1 opacity-0"
+        ref={panelRef}
+        style={{
+          transform: `translateX(calc(-50% + ${shiftX}px)) translateY(${
+            open ? "0px" : "-4px"
+          })`,
+        }}
+        className={`absolute left-1/2 top-full z-[100] w-[320px] max-w-[calc(100vw-1.5rem)] pt-4 transition-[opacity,transform] duration-300 ease-out ${
+          open ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
         <div className="rounded-2xl border border-champagne-gold/30 bg-midnight-navy/98 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm">

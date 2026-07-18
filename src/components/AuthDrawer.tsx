@@ -11,6 +11,7 @@ import {
   renderVisibleCaptcha,
   resetVisibleCaptcha,
 } from "@/lib/wixCaptcha";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 enum MODE {
   LOGIN = "LOGIN",
@@ -128,13 +129,11 @@ export default function AuthDrawer({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockScroll();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlockScroll();
     };
   }, [open, onClose]);
 

@@ -10,6 +10,8 @@ import {
 } from "@/lib/store/useCartStore";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { formatPrice } from "@/lib/format";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
+import { evaluateCoupon, PRIMARY_COUPON } from "@/lib/commerce/pricing";
 
 // Spend this much (in rupees) to unlock complimentary shipping.
 const FREE_SHIPPING_THRESHOLD = 1500;
@@ -30,23 +32,50 @@ export default function CartDrawer() {
   const cartItems = hydrated ? cartItemsRaw : [];
   const totalPrice = hydrated ? totalPriceRaw : 0;
 
-  // Luxury gift wrap + intention note upsell.
-  const [giftWrap, setGiftWrap] = useState(false);
-  const [giftNote, setGiftNote] = useState("");
+  // Luxury gift wrap + intention note upsell. Lives on the store so it carries
+  // into checkout and onto the order.
+  const giftWrap = useCartStore((s) => s.giftWrap);
+  const giftNote = useCartStore((s) => s.giftNote);
+  const setGiftWrap = useCartStore((s) => s.setGiftWrap);
+  const setGiftNote = useCartStore((s) => s.setGiftNote);
   const giftWrapFee = giftWrap ? GIFT_WRAP_FEE : 0;
-  const displayTotal = totalPrice + giftWrapFee;
 
-  // Offer code — frontend only for now.
+  // Coupon — validated against the pricing mirror, then stored so checkout + Wix
+  // pick it up. Wix stays authoritative at checkout; this is the preview.
+  const appliedCoupon = useCartStore((s) => s.appliedCoupon);
+  const setAppliedCoupon = useCartStore((s) => s.setAppliedCoupon);
   const [promoOpen, setPromoOpen] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState("");
+
+  const coupon = hydrated
+    ? evaluateCoupon(appliedCoupon, totalPrice)
+    : { discount: 0, error: "" };
+  const couponDiscount = appliedCoupon ? coupon.discount : 0;
+  const displayTotal = Math.max(0, totalPrice + giftWrapFee - couponDiscount);
+
+  // Viora-style unlock nudge for the promoted coupon.
+  const couponRemaining = Math.max(0, PRIMARY_COUPON.minimum - totalPrice);
+  const couponUnlocked = totalPrice >= PRIMARY_COUPON.minimum;
 
   const applyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!promoCode.trim()) return;
-    setPromoApplied(true);
-    setPromoCode("");
-    toast.success("✦ Harmony code applied successfully.");
+    const code = promoCode.trim();
+    if (!code) return;
+    const { discount, error } = evaluateCoupon(code, totalPrice);
+    if (discount > 0) {
+      setAppliedCoupon(code.toUpperCase());
+      setPromoError("");
+      setPromoCode("");
+      toast.success("✦ Coupon applied.");
+    } else {
+      setPromoError(error);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedCoupon("");
+    setPromoError("");
   };
 
   // Hand off to the real checkout modal (COD + Razorpay → Wix order + email).
@@ -71,11 +100,11 @@ export default function CartDrawer() {
       if (e.key === "Escape") closeCart();
     };
     document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
+    lockScroll();
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [isCartOpen, closeCart]);
 
@@ -157,6 +186,32 @@ export default function CartDrawer() {
                 style={{ width: `${shippingProgress}%` }}
               />
             </div>
+          </div>
+        )}
+
+        {/* Coupon unlock nudge — Viora style. "Add ₹X more to save 10%". Flips to a
+            success line once the threshold is met (and auto-applies below). */}
+        {cartItems.length > 0 && (
+          <div className="border-b border-midnight-navy/10 px-6 py-3 bg-champagne-gold/5">
+            <p className="text-center text-xs leading-5 tracking-wide text-midnight-navy/80 sm:text-sm">
+              {couponUnlocked ? (
+                <span className="font-semibold text-champagne-gold">
+                  ✦ You&apos;ve unlocked 10% off — apply code{" "}
+                  <span className="font-bold">{PRIMARY_COUPON.code}</span> below.
+                </span>
+              ) : (
+                <>
+                  Add{" "}
+                  <span className="font-bold text-midnight-navy">
+                    {formatPrice(couponRemaining)}
+                  </span>{" "}
+                  more to save 10% with{" "}
+                  <span className="font-semibold text-champagne-gold">
+                    {PRIMARY_COUPON.code}
+                  </span>
+                </>
+              )}
+            </p>
           </div>
         )}
 
@@ -270,7 +325,7 @@ export default function CartDrawer() {
                 type="button"
                 role="switch"
                 aria-checked={giftWrap}
-                onClick={() => setGiftWrap((v) => !v)}
+                onClick={() => setGiftWrap(!giftWrap)}
                 className="flex w-full cursor-pointer items-center justify-between gap-4 text-left transition-all duration-150 active:scale-[0.99]"
               >
                 <span className="text-xs font-semibold uppercase tracking-[0.2em] text-midnight-navy/85">
@@ -350,29 +405,46 @@ export default function CartDrawer() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <form onSubmit={applyPromo} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promoCode}
-                      onChange={(e) => {
-                        setPromoCode(e.target.value);
-                        setPromoApplied(false);
-                      }}
-                      placeholder="Enter code"
-                      aria-label="Offer code"
-                      className="flex-1 rounded-md border border-midnight-navy/30 bg-transparent px-4 py-2.5 text-xs uppercase tracking-[0.15em] text-midnight-navy placeholder:normal-case placeholder:tracking-normal placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy"
-                    />
-                    <button
-                      type="submit"
-                      className="flex-shrink-0 cursor-pointer rounded-full bg-midnight-navy px-5 py-2 text-xs font-medium uppercase tracking-[0.2em] text-champagne-gold transition-all duration-150 hover:bg-midnight-navy/90 active:scale-95"
-                    >
-                      Apply
-                    </button>
-                  </form>
-                  {promoApplied && (
-                    <p className="mt-3 text-xs tracking-wide text-champagne-gold font-semibold">
-                      ✦ Code applied — savings appear at checkout.
-                    </p>
+                  {appliedCoupon && couponDiscount > 0 ? (
+                    <div className="flex items-center justify-between gap-2 rounded-md border border-champagne-gold/40 bg-champagne-gold/10 px-4 py-2.5">
+                      <span className="text-xs font-semibold uppercase tracking-[0.15em] text-champagne-gold">
+                        ✦ {appliedCoupon} applied
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removePromo}
+                        className="flex-shrink-0 cursor-pointer text-xs uppercase tracking-[0.15em] text-midnight-navy/60 underline-offset-2 transition-colors hover:text-midnight-navy hover:underline active:scale-95"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <form onSubmit={applyPromo} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => {
+                            setPromoCode(e.target.value);
+                            setPromoError("");
+                          }}
+                          placeholder="Enter code"
+                          aria-label="Offer code"
+                          className="flex-1 rounded-md border border-midnight-navy/30 bg-transparent px-4 py-2.5 text-xs uppercase tracking-[0.15em] text-midnight-navy placeholder:normal-case placeholder:tracking-normal placeholder:text-midnight-navy/60 focus:outline-none focus:border-midnight-navy focus:ring-1 focus:ring-midnight-navy"
+                        />
+                        <button
+                          type="submit"
+                          className="flex-shrink-0 cursor-pointer rounded-full bg-midnight-navy px-5 py-2 text-xs font-medium uppercase tracking-[0.2em] text-champagne-gold transition-all duration-150 hover:bg-midnight-navy/90 active:scale-95"
+                        >
+                          Apply
+                        </button>
+                      </form>
+                      {promoError && (
+                        <p className="mt-3 text-xs tracking-wide text-red-600">
+                          {promoError}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -394,6 +466,15 @@ export default function CartDrawer() {
                 <div className="flex items-center justify-between text-xs text-midnight-navy/70">
                   <span className="uppercase tracking-[0.15em]">Gift wrap</span>
                   <span className="font-bold">+{formatPrice(GIFT_WRAP_FEE)}</span>
+                </div>
+              )}
+
+              {couponDiscount > 0 && (
+                <div className="flex items-center justify-between text-xs text-champagne-gold">
+                  <span className="uppercase tracking-[0.15em]">
+                    Coupon ({appliedCoupon})
+                  </span>
+                  <span className="font-bold">− {formatPrice(couponDiscount)}</span>
                 </div>
               )}
             </div>

@@ -2,7 +2,7 @@
 // Indian shopper has (is it real? can I pay on delivery? what's shipping cost?)
 // are answered before they scroll.
 const PHRASE =
-  "✦ 100% ORIGINAL LAB CERTIFIED CRYSTALS ✦ CASH ON DELIVERY AVAILABLE ✦ FREE PAN-INDIA SHIPPING ✦";
+  "✦ 100% ORIGINAL LAB CERTIFIED CRYSTALS ✦ USE CODE OJAS10 FOR 10% OFF ORDERS OVER ₹1499 ✦ CASH ON DELIVERY AVAILABLE ✦ FREE PAN-INDIA SHIPPING ✦";
 
 export default function AnnouncementBar() {
   return (

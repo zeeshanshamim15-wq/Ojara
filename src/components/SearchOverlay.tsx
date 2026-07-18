@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 // Trending searches deep-link to the most relevant piece so the overlay is
 // useful even before real search is wired up.
@@ -29,13 +30,13 @@ export default function SearchOverlay({
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     // Focus the field once the overlay is up.
     const id = window.setTimeout(() => inputRef.current?.focus(), 50);
 
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
+      unlockScroll();
       window.clearTimeout(id);
     };
   }, [open, onClose]);
