@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+const INSTAGRAM_URL = "https://www.instagram.com/ojara.india";
+
 const img = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&q=80`;
 
@@ -57,17 +59,32 @@ export default function SocialProofGrid() {
     <section className="border-y border-champagne-gold/30 bg-ivory px-6 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 text-center sm:mb-14">
-          <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-champagne-gold">
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Ojara on Instagram"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.4em] text-champagne-gold transition-opacity hover:opacity-70"
+          >
             <span className="text-champagne-gold">
               <InstagramIcon />
             </span>
             @ojara
-          </span>
+          </a>
           <h2 className="mt-5 text-3xl uppercase tracking-[0.15em] text-midnight-navy sm:text-4xl">
             The Ojara Community
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-midnight-navy/70">
-            Tag <span className="text-champagne-gold font-medium">@ojara</span> to see your ritual featured.
+            Tag{" "}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-champagne-gold font-medium hover:underline"
+            >
+              @ojara
+            </a>{" "}
+            to see your ritual featured.
           </p>
         </div>
 
@@ -75,7 +92,7 @@ export default function SocialProofGrid() {
           {posts.map((post) => (
             <a
               key={post.id}
-              href="https://instagram.com"
+              href={INSTAGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View on Instagram"
