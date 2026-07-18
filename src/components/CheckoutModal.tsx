@@ -15,6 +15,7 @@ import {
 } from "@/lib/commerce/pricing";
 import { WIX_ENABLED, BRAND_NAME } from "@/lib/commerce/config";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
+import { trackEvent } from "@/lib/analytics/capi";
 
 type PaymentMethod = "PREPAID" | "COD";
 
@@ -290,6 +291,24 @@ export default function CheckoutModal() {
   };
 
   const completeOrder = (orderId: string) => {
+    // Fire Purchase BEFORE clearCart wipes the totals. eventId = orderId so the
+    // browser Pixel (via GTM) and the server CAPI event de-duplicate.
+    trackEvent("Purchase", {
+      eventId: `purchase-${orderId}`,
+      customData: {
+        currency: "INR",
+        value: totals.total,
+        content_ids: lines.map((l) => l.id),
+        content_type: "product",
+        num_items: lines.reduce((n, l) => n + l.quantity, 0),
+        order_id: orderId,
+      },
+      userData: {
+        email: email.trim() || undefined,
+        phone: mobile.replace(/\D/g, "") || undefined,
+        firstName: fullName.trim().split(/\s+/)[0] || undefined,
+      },
+    });
     clearCart();
     // Reset for next time (handler, not an effect — React Compiler safe).
     setStep(1);

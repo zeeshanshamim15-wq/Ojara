@@ -4,7 +4,8 @@ import BackButton from "@/components/BackButton";
 import FaqAccordion, { type FaqItem } from "@/components/FaqAccordion";
 
 export const metadata: Metadata = {
-  title: "FAQ | OJARA",
+  title: "FAQ",
+  alternates: { canonical: "/faq" },
   description:
     "Answers to common questions about OJARA crystals, orders, and care.",
 };

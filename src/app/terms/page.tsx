@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import PolicyPage from "@/components/PolicyPage";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | OJARA",
+  title: "Terms of Service",
+  alternates: { canonical: "/terms" },
   description:
     "The terms and conditions governing your use of the OJARA store.",
 };

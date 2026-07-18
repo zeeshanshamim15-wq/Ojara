@@ -11,6 +11,8 @@ import ProductFaq from "@/components/ProductFaq";
 import YouMayAlsoLike from "@/components/YouMayAlsoLike";
 import ProductGallery from "@/components/ProductGallery";
 import ShareButton from "@/components/ShareButton";
+import JsonLd from "@/components/seo/JsonLd";
+import { productSchema } from "@/lib/seo";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import TrackRecentlyViewed from "@/components/TrackRecentlyViewed";
 import ProductCtas from "@/components/ProductCtas";
@@ -90,18 +92,27 @@ export async function generateMetadata({
 
   if (!product) return {};
 
+  const url = `/product/${id}`;
+  const images = (product.images?.length ? product.images : [product.image]).map(
+    (src) => ({ url: src, alt: product.name }),
+  );
+
   return {
-    title: `${product.name} | OJARA`,
+    title: product.name,
     description: product.description,
+    alternates: { canonical: url },
     openGraph: {
       title: `${product.name} | OJARA`,
       description: product.description,
-      images: [
-        {
-          url: product.image,
-          alt: product.name,
-        },
-      ],
+      url,
+      type: "website",
+      images,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | OJARA`,
+      description: product.description,
+      images: images.map((i) => i.url),
     },
   };
 }
@@ -123,6 +134,8 @@ export default async function ProductDetailPage({
 
   return (
     <div className="bg-ivory">
+      {/* Product structured data for search engines + AI shopping surfaces */}
+      <JsonLd id="ld-product" data={productSchema(product)} />
       {/* Record this visit in the persisted browsing history */}
       <TrackRecentlyViewed productId={product.id} />
 

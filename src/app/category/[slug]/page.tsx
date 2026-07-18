@@ -23,8 +23,16 @@ export async function generateMetadata({
   if (!category) return {};
 
   return {
-    title: `${category.title} | OJARA`,
+    title: category.title,
     description: category.tagline,
+    alternates: { canonical: `/category/${slug}` },
+    openGraph: {
+      title: `${category.title} | OJARA`,
+      description: category.tagline,
+      url: `/category/${slug}`,
+      type: "website",
+      ...(category.image ? { images: [{ url: category.image, alt: category.title }] } : {}),
+    },
   };
 }
 

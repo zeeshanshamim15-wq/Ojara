@@ -12,6 +12,7 @@ import RecentlyViewed from "@/components/RecentlyViewed";
 import { formatPrice } from "@/lib/format";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import { evaluateCoupon, PRIMARY_COUPON, GIFT_WRAP_FEE } from "@/lib/commerce/pricing";
+import { trackEvent } from "@/lib/analytics/capi";
 
 // Spend this much (in rupees) to unlock complimentary shipping.
 const FREE_SHIPPING_THRESHOLD = 1500;
@@ -79,6 +80,15 @@ export default function CartDrawer() {
   // Hand off to the real checkout modal (COD + Razorpay → Wix order + email).
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
+    trackEvent("InitiateCheckout", {
+      customData: {
+        currency: "INR",
+        value: displayTotal,
+        num_items: cartItems.reduce((n, i) => n + i.quantity, 0),
+        content_ids: cartItems.map((i) => i.product.id),
+        content_type: "product",
+      },
+    });
     openCheckout();
   };
 

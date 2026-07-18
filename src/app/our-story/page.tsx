@@ -4,7 +4,8 @@ import Link from "next/link";
 import BackButton from "@/components/BackButton";
 
 export const metadata: Metadata = {
-  title: "Our Story | OJARA",
+  title: "Our Story",
+  alternates: { canonical: "/our-story" },
   description:
     "The meaning of Ojas, how our crystals are ethically sourced, and the intention behind OJARA.",
 };

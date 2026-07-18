@@ -5,7 +5,8 @@ import { SUPPORT_EMAIL } from "@/lib/commerce/config";
 import BackButton from "@/components/BackButton";
 
 export const metadata: Metadata = {
-  title: "Contact Us | OJARA",
+  title: "Contact Us",
+  alternates: { canonical: "/contact" },
   description:
     "Questions about your order, a piece, or an intention? Send OJARA a message — our team replies within one working day.",
 };

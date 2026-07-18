@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import PolicyPage from "@/components/PolicyPage";
 
 export const metadata: Metadata = {
-  title: "Shipping & Returns | OJARA",
+  title: "Shipping & Returns",
+  alternates: { canonical: "/shipping-returns" },
   description:
     "Shipping times, costs, and our 30-day authentic returns policy.",
 };

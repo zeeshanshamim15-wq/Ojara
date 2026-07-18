@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import type { Product } from "@/lib/mockData";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { trackEvent } from "@/lib/analytics/capi";
 
 export default function AddToCartButton({
   product,
@@ -26,6 +27,15 @@ export default function AddToCartButton({
 
   const handleClick = () => {
     addItem(product);
+    trackEvent("AddToCart", {
+      customData: {
+        currency: "INR",
+        value: product.price,
+        content_ids: [product.id],
+        content_name: product.name,
+        content_type: "product",
+      },
+    });
     toast.success("✦ Added to Cart successfully!", {
       description: product.name,
       style: {
