@@ -26,6 +26,9 @@
 /** Flat "pay online" discount. Stacks on any coupon. Not a Wix coupon. */
 export const PREPAID_DISCOUNT = 50;
 
+/** Luxury gift-wrap + handwritten note charge (₹). A real charge on the order. */
+export const GIFT_WRAP_FEE = 149;
+
 /** Shown-then-struck display fees. Pure optics — never charged. */
 export const SHIPPING_FEE_DISPLAY = 99;
 export const PROCESSING_FEE_DISPLAY = 50;

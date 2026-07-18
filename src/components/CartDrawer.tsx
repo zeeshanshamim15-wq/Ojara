@@ -11,12 +11,10 @@ import {
 import RecentlyViewed from "@/components/RecentlyViewed";
 import { formatPrice } from "@/lib/format";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
-import { evaluateCoupon, PRIMARY_COUPON } from "@/lib/commerce/pricing";
+import { evaluateCoupon, PRIMARY_COUPON, GIFT_WRAP_FEE } from "@/lib/commerce/pricing";
 
 // Spend this much (in rupees) to unlock complimentary shipping.
 const FREE_SHIPPING_THRESHOLD = 1500;
-// Flat fee for the luxury gift-wrap + handwritten intention note.
-const GIFT_WRAP_FEE = 149;
 
 export default function CartDrawer() {
   const isCartOpen = useCartStore((state) => state.isCartOpen);
@@ -216,7 +214,7 @@ export default function CartDrawer() {
         )}
 
         {/* Items scroll rail */}
-        <div className="flex-1 overflow-y-auto px-6 py-2">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto px-6 py-2">
           {cartItems.length === 0 ? (
             <div className="flex h-full flex-col justify-center">
               <div className="text-center">

@@ -107,7 +107,7 @@ export default function EnergyQuiz({
         {/* Scrollable body — caps at the dialog height so tall result content can
             scroll instead of overflowing off the top/bottom of the viewport. The
             close button above stays pinned outside this scroll area. */}
-        <div className="overflow-y-auto">
+        <div data-lenis-prevent className="overflow-y-auto">
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 pt-8">
           {[1, 2].map((s) => (

@@ -210,7 +210,7 @@ export default function MobileNav() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto">
           {/* Primary + action rows */}
           <ul className="px-2 py-3">
             {primaryLinks.map((item) => (

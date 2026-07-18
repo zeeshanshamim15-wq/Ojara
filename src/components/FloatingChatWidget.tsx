@@ -114,6 +114,7 @@ export default function FloatingChatWidget() {
         {/* Messages */}
         <div
           ref={scrollRef}
+          data-lenis-prevent
           className="flex flex-1 flex-col gap-3 overflow-y-auto bg-sand/30 px-4 py-5"
         >
           {messages.map((message, i) => (

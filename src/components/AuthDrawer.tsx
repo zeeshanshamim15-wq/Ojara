@@ -516,7 +516,7 @@ export default function AuthDrawer({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-8 py-10">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto px-8 py-10">
           <p className="text-[0.65rem] uppercase tracking-[0.4em] text-champagne-gold font-semibold">
             ✦ {copy.eyebrow}
           </p>

@@ -99,7 +99,6 @@ export default function ShopMenu() {
     window.addEventListener("resize", clamp);
     return () => window.removeEventListener("resize", clamp);
     // categories affects the panel's width once loaded; re-clamp then.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, categories]);
 
   return (

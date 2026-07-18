@@ -1,5 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { WIX_ADMIN_ENABLED } from "@/lib/commerce/config";
+import { GIFT_WRAP_FEE, PREPAID_DISCOUNT } from "@/lib/commerce/pricing";
 import {
   sendOrderConfirmationEmail,
   type OrderEmailParams,
@@ -280,63 +281,82 @@ export async function POST(req: Request) {
         orderResult?.order?.priceSummary?.total?.amount,
     );
 
-    // 5. Prepaid discount reconciliation (see §8 for the full rationale).
-    // Best-effort: on any failure the original order stands and we record the
-    // real amount paid. Never blocks the order.
+    // 5. Order adjustments via ONE draft-order edit (see §8 for the rationale).
+    // Coupons are already applied natively on the checkout, so wixOrderTotal has
+    // them. Two things Wix doesn't know about are reconciled here:
+    //   • gift wrap  — a real +₹149 charge (both COD and prepaid),
+    //   • prepaid −₹50 — the flat online-payment discount (prepaid only; it's not
+    //     a Wix coupon).
+    // Best-effort: on any failure the original order stands. Never blocks the order.
     let finalTotal = wixOrderTotal;
     let committedOrder: Record<string, unknown> | null = null;
     let discountApplied = false;
 
-    if (paymentMethod === "PREPAID" && razorpayPaymentId) {
-      const amountPaid = Number(razorpayAmount);
-      if (
-        Number.isFinite(amountPaid) &&
-        Number.isFinite(wixOrderTotal) &&
-        amountPaid > 0 &&
-        amountPaid < wixOrderTotal
-      ) {
-        const discount = Number((wixOrderTotal - amountPaid).toFixed(2));
-        try {
-          const draftRes = await wixClient.draftOrders.createDraftOrder({
-            sourceOrderId: orderId,
-          });
-          const draftId =
-            draftRes?.calculatedDraftOrder?.draftOrder?._id ||
-            draftRes?.draftOrder?._id;
-          if (!draftId) throw new Error("Draft order id missing from response.");
+    const giftWrapAmount = giftWrap ? GIFT_WRAP_FEE : 0;
+    const prepaidDiscountAmount =
+      paymentMethod === "PREPAID" && razorpayPaymentId ? PREPAID_DISCOUNT : 0;
 
+    if (giftWrapAmount > 0 || prepaidDiscountAmount > 0) {
+      try {
+        const draftRes = await wixClient.draftOrders.createDraftOrder({
+          sourceOrderId: orderId,
+        });
+        const draftId =
+          draftRes?.calculatedDraftOrder?.draftOrder?._id ||
+          draftRes?.draftOrder?._id;
+        if (!draftId) throw new Error("Draft order id missing from response.");
+
+        if (giftWrapAmount > 0) {
+          await wixClient.draftOrders.createCustomAdditionalFees(draftId, {
+            customAdditionalFees: [
+              {
+                name: "Gift Wrap & Note",
+                price: { amount: giftWrapAmount.toFixed(2) },
+                applyToDraftOrder: true,
+              },
+            ],
+          });
+        }
+
+        if (prepaidDiscountAmount > 0) {
           await wixClient.draftOrders.createCustomDiscounts(draftId, {
             discounts: [
               {
-                priceAmount: { amount: discount.toFixed(2) },
+                priceAmount: { amount: prepaidDiscountAmount.toFixed(2) },
                 discountType: "GLOBAL",
                 applyToDraftOrder: true,
                 description: "Online payment discount",
               },
             ],
           });
-
-          const commitRes = await wixClient.draftOrders.commitDraftOrder(draftId, {
-            commitSettings: {
-              sendNotificationsToBuyer: false,
-              sendNotificationsToBusiness: false,
-            },
-            reason: "Online payment (prepaid) discount",
-          });
-
-          committedOrder = commitRes?.orderAfterCommit || null;
-          const committedTotal = committedOrder?.priceSummary as
-            | { total?: { amount?: string } }
-            | undefined;
-          finalTotal =
-            committedTotal?.total?.amount != null
-              ? Number(committedTotal.total.amount)
-              : amountPaid;
-          discountApplied = true;
-        } catch (discErr) {
-          console.error("Prepaid discount (draft edit) failed:", discErr);
-          finalTotal = amountPaid;
         }
+
+        const commitRes = await wixClient.draftOrders.commitDraftOrder(draftId, {
+          commitSettings: {
+            sendNotificationsToBuyer: false,
+            sendNotificationsToBusiness: false,
+          },
+          reason: "Gift wrap / online payment adjustment",
+        });
+
+        committedOrder = commitRes?.orderAfterCommit || null;
+        const committedTotal = committedOrder?.priceSummary as
+          | { total?: { amount?: string } }
+          | undefined;
+        const fallbackTotal =
+          Number.isFinite(wixOrderTotal)
+            ? wixOrderTotal + giftWrapAmount - prepaidDiscountAmount
+            : Number(razorpayAmount);
+        finalTotal =
+          committedTotal?.total?.amount != null
+            ? Number(committedTotal.total.amount)
+            : fallbackTotal;
+        discountApplied = true;
+      } catch (adjErr) {
+        console.error("Order adjustment (draft edit) failed:", adjErr);
+        finalTotal = Number.isFinite(Number(razorpayAmount))
+          ? Number(razorpayAmount)
+          : wixOrderTotal;
       }
     }
 

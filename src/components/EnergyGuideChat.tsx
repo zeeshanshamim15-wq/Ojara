@@ -131,6 +131,7 @@ export default function EnergyGuideChat() {
         {/* Message Area with Custom Scrollbar */}
         <div
           ref={scrollRef}
+          data-lenis-prevent
           className="flex-1 overflow-y-auto bg-midnight-navy/95 px-4 py-5 space-y-4 scrollbar-thin"
           style={{
             scrollbarWidth: "thin",

@@ -11,6 +11,7 @@ import {
   computeTotals,
   evaluateCoupon,
   PREPAID_DISCOUNT,
+  GIFT_WRAP_FEE,
 } from "@/lib/commerce/pricing";
 import { WIX_ENABLED, BRAND_NAME } from "@/lib/commerce/config";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
@@ -105,7 +106,6 @@ export default function CheckoutModal() {
   const [couponInput, setCouponInput] = useState("");
   const [couponError, setCouponError] = useState("");
 
-  const GIFT_WRAP_FEE = 149;
   const giftWrapFee = giftWrap ? GIFT_WRAP_FEE : 0;
 
   // Normalised cart lines — the seam. Today from the local store; when the Wix
@@ -451,7 +451,7 @@ export default function CheckoutModal() {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div data-lenis-prevent className="flex-1 overflow-y-auto px-6 py-5">
           {error && (
             <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
               {error}
