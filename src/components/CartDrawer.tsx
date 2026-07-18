@@ -213,8 +213,10 @@ export default function CartDrawer() {
           </div>
         )}
 
-        {/* Items scroll rail */}
-        <div data-lenis-prevent className="flex-1 overflow-y-auto px-6 py-2">
+        {/* Items scroll rail. min-h-0 lets this flex child actually shrink so a
+            tall footer (gift-wrap note open) can't squeeze it past the point where
+            it stops scrolling. */}
+        <div data-lenis-prevent className="min-h-0 flex-1 overflow-y-auto px-6 py-2">
           {cartItems.length === 0 ? (
             <div className="flex h-full flex-col justify-center">
               <div className="text-center">
@@ -314,9 +316,15 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Sticky footer with pricing details + checkouts */}
+        {/* Footer with the upsells, pricing + checkout. Capped and scrollable so
+            that when the gift-wrap note expands, the whole thing (toggle at the top
+            through the ORDER NOW button) stays reachable instead of overflowing off
+            the drawer with nowhere to scroll. */}
         {cartItems.length > 0 && (
-          <div className="border-t border-midnight-navy/15 px-6 py-6 bg-sand/15 shadow-[0_-8px_30px_rgba(0,0,0,0.03)] backdrop-blur-md">
+          <div
+            data-lenis-prevent
+            className="max-h-[62vh] flex-shrink-0 overflow-y-auto border-t border-midnight-navy/15 px-6 py-6 bg-sand/15 shadow-[0_-8px_30px_rgba(0,0,0,0.03)] backdrop-blur-md"
+          >
             {/* Luxury gift wrap + intention note upsells */}
             <div className="mb-4 border-b border-midnight-navy/10 pb-4">
               <button
@@ -499,7 +507,7 @@ export default function CartDrawer() {
                 <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              Secure Wix checkout · encrypted
+              Secure checkout · encrypted
             </p>
           </div>
         )}

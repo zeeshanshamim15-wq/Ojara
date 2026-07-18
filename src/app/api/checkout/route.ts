@@ -172,6 +172,7 @@ export async function POST(req: Request) {
         razorpayPaymentId: razorpayPaymentId || undefined,
         items,
         summary,
+        giftNote: giftWrap && giftNote ? giftNote : undefined,
         address: { line1: addressLine1, city, state, postalCode },
         phone,
       }).catch((e) => console.error("Mock order email failed:", e));
@@ -205,14 +206,16 @@ export async function POST(req: Request) {
         },
       },
       buyerInfo: { email },
+      // Lead the buyer note with the gift message so it's the first thing the
+      // owner reads on the Wix order — that's the whole point of collecting it.
       buyerNote:
+        (giftWrap && giftNote ? `🎁 GIFT NOTE: "${giftNote}"\n` : "") +
+        (giftWrap ? `Gift wrap requested (+₹${GIFT_WRAP_FEE}).\n` : "") +
         (paymentMethod === "COD"
           ? `Payment: Cash on Delivery (COD). Phone: ${phone}. Pincode: ${postalCode}.`
           : `Payment: Prepaid. Phone: ${phone}. Pincode: ${postalCode}.` +
             (razorpayPaymentId ? ` Razorpay Payment ID: ${razorpayPaymentId}.` : "") +
-            (razorpayAmount ? ` Amount paid: ${razorpayAmount}.` : "")) +
-        (giftWrap ? ` ✦ GIFT WRAP (+₹149).` : "") +
-        (giftWrap && giftNote ? ` Note: "${giftNote}".` : ""),
+            (razorpayAmount ? ` Amount paid: ${razorpayAmount}.` : "")),
       customFields: [
         {
           title: "Payment Method",
@@ -307,10 +310,16 @@ export async function POST(req: Request) {
         if (!draftId) throw new Error("Draft order id missing from response.");
 
         if (giftWrapAmount > 0) {
+          // Embed a preview of the note in the fee name (Wix caps it at 50 chars)
+          // so it's visible right on the charge line; the full note lives in the
+          // buyer note + the "Gift Note" custom field.
+          const notePreview = giftNote
+            ? `: "${giftNote.slice(0, 30)}${giftNote.length > 30 ? "…" : ""}"`
+            : "";
           await wixClient.draftOrders.createCustomAdditionalFees(draftId, {
             customAdditionalFees: [
               {
-                name: "Gift Wrap & Note",
+                name: `Gift wrap${notePreview}`.slice(0, 50),
                 price: { amount: giftWrapAmount.toFixed(2) },
                 applyToDraftOrder: true,
               },
@@ -435,6 +444,7 @@ export async function POST(req: Request) {
         shipping: ps?.shipping?.amount || undefined,
         tax: ps?.tax?.amount || undefined,
         discount: ps?.discount?.amount || undefined,
+        giftWrap: giftWrapAmount > 0 ? String(giftWrapAmount) : undefined,
         total:
           ps?.total?.amount ||
           (Number.isFinite(emailAmount) ? emailAmount.toFixed(2) : undefined),
@@ -462,6 +472,7 @@ export async function POST(req: Request) {
         razorpayPaymentId: razorpayPaymentId || undefined,
         items,
         summary,
+        giftNote: giftWrap && giftNote ? giftNote : undefined,
         address: { line1: addressLine1, city, state, postalCode },
         phone,
       };
